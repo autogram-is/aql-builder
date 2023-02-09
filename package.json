@@ -8,13 +8,24 @@
   }, 
   "type": "module",
   "scripts": {
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "lint-and-fix": "eslint . --ext .ts --fix",
     "startup": "docker-compose up -d",
     "shutdown": "docker-compose stop",
+    "test": "ava",
     "build": "tsc"
   },
   "devDependencies": {
+    "@ava/typescript": "^3.0.1",
     "@salesforce/ts-types": "^1.7.3",
     "@types/node": "^18.11.0",
+    "@typescript-eslint/eslint-plugin": "^5.47.0",
+    "@typescript-eslint/parser": "^5.47.0",
+    "ava": "^5.1.0",
+    "eslint": "^8.30.0",
+    "eslint-plugin-ava": "^13.2.0",
+    "prettier": "^2.8.1",
     "ts-node": "^10.8.0",
     "typescript": "^4.9.4"
   },
