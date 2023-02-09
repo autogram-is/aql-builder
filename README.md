@@ -1,4 +1,4 @@
-# AQL
+# AQL Builder
 
 A simple dynamic query-builder for ArangoDB, written in typescript.
 
