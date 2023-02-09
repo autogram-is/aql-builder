@@ -8,7 +8,7 @@ A simple dynamic query-builder for ArangoDB, written in typescript.
 
 ## Usage
 
-AQL Builder supports two modes: you can build a JSON 'query spec' and generate AQL from it, or you can create a new Query object and chaining method calls to assemble the query clause by clause.
+AQL Builder supports two modes: you can build a JSON 'query spec' and generate AQL from it, or you can create a new Query object and chain method calls to assemble the query clause by clause.
 
 ### Fluent
 
