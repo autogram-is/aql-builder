@@ -9,6 +9,7 @@ import {
   Sort,
 } from './property.js';
 import { QuerySpec } from './query-spec.js';
+import { isArangoCollection } from 'arangojs/collection.js';
 
 /**
  * Given a QuerySpec object, build an executable GeneratedAqlQuery.
@@ -22,25 +23,29 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
 
   // An array of GneratedAqlQueries we can fill as we build out the query
   const querySegments: GeneratedAqlQuery[] = [];
-  querySegments.push(aql`FOR item IN ${literal(spec.collection)}`);
+  if (isArangoCollection(spec.collection)) {
+    querySegments.push(aql`FOR item IN ${spec.collection}`);
+  } else {
+    querySegments.push(aql`FOR item IN ${literal(spec.collection)}`);
+  }
 
   // If we're doing any collect or aggregation queries, turn the properties
   // into collects — otherwise, they'd disappear after the collect statement
   // resets the query's local variables.
-  if (spec.aggregates?.length) {
+  if (spec.aggregate?.length) {
     const coerced: Aggregate[] =
-      spec.properties
+      spec.return
         ?.filter(p => p.label !== false)
         .map(p => {
           return { ...p, aggregate: 'collect' } as Aggregate;
         }) ?? [];
-    spec.aggregates.push(...coerced);
-    spec.properties = undefined;
+    spec.aggregate.push(...coerced);
+    spec.return = undefined;
   }
 
   // If there are still properties left, we add them to the final
   // returned result collection.
-  for (const p of spec.properties ?? []) {
+  for (const p of spec.return ?? []) {
     const path = renderPath(p);
     if (p.label !== false) {
       const label = p.label ? labelify(p.label) : labelify(p.property);
@@ -50,7 +55,7 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
 
   // Loop through the aggregates, splitting out 'collect' assignments
   // (equivalent to SQL's GROUP BY) from the aggregation functions.
-  for (const p of spec.aggregates ?? []) {
+  for (const p of spec.aggregate ?? []) {
     const path = renderPath(p);
     if (p.label !== false) {
       const label = p.label ? labelify(p.label) : labelify(p.property);
@@ -65,7 +70,7 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
   }
 
   // Add any filters that should apply *before* the collect statement.
-  for (const p of spec.filters ?? []) {
+  for (const p of spec.filter ?? []) {
     if (p.collected !== true) querySegments.push(...wrapFilter(p));
   }
 
@@ -115,7 +120,7 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
   }
 
   // Add any filters that should apply after the collection is done
-  for (const p of spec.filters ?? []) {
+  for (const p of spec.filter ?? []) {
     if (p.collected === true) querySegments.push(...wrapFilter(p));
   }
 
@@ -124,12 +129,12 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     querySegments.push(aql`LIMIT ${spec.limit}`);
   }
 
-  if (spec.sorts === null) {
+  if (spec.sort === null) {
     querySegments.push(aql`SORT null`);
   } else {
-    for (const p of spec.sorts ?? []) {
+    for (const p of spec.sort ?? []) {
       const path = renderPath({
-        collected: spec.aggregates?.length ? true : false,
+        collected: spec.aggregate?.length ? true : false,
         ...p,
       });
       querySegments.push(

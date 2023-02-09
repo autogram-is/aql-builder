@@ -1,6 +1,6 @@
 # AQL Builder
 
-A simple dynamic query-builder for ArangoDB, written in typescript.
+A simple dynamic query-builder for ArangoDB, written in Typescript.
 
 ## Installation
 
@@ -32,15 +32,15 @@ import { QuerySpec, buildQuery } from 'aql-builder';
 
 const qs: QuerySpec = {
   collection: 'responses',
-  filters: [
+  filter: [
     { property: 'url.domain', in: ['example.com', 'test.com'] },
     { property: 'status', in: [200, 404], collected: true },
   ],
-  aggregates: [
+  aggregate: [
     { property: 'status', aggregate: 'collect' },
     { property: 'mime', aggregate: 'collect' },
   ],
-  sorts: [
+  sort: [
     { property: 'total', sort: 'desc' },
   ],
   count: 'total'

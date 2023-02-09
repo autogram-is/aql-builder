@@ -1,35 +1,28 @@
+import { ArangoCollection } from 'arangojs/collection.js';
 import { Property, Aggregate, Sort, Filter } from './property.js';
 
 /**
- * Describes an
+ * A structured description of a simple Arango query.
  *
- * @typedef {AqlQuery}
+ * Although this format can't express AQL's full capabilities, it supports
+ * the essentials:
  */
 export type QuerySpec = {
   /**
-   * The name of the Arango collection to query.
+   * The name of the collection to query, or a direct reference to an
+   * {@link ArangoCollection} instance.
    */
-  collection: string;
+  collection: string | ArangoCollection;
 
   /**
-   * A list of properties on the document
+   * A list of {@link Filter} properties to use when querying the collection.
    */
-  properties?: Property[];
+  filter?: Filter[];
 
   /**
-   * Description placeholder
+   * A list of {@link Aggregate} properties to group or aggregate results by.
    */
-  aggregates?: Aggregate[];
-
-  /**
-   * Description placeholder
-   */
-  filters?: Filter[];
-
-  /**
-   * Description placeholder
-   */
-  sorts?: Sort[] | null;
+  aggregate?: Aggregate[];
 
   /**
    * The label to use for record counts when building aggregate queries.
@@ -40,7 +33,17 @@ export type QuerySpec = {
   count?: string | false;
 
   /**
-   * Description placeholder
+   * A list of properties to {@link Sort} results by.
+   */
+  sort?: Sort[] | null;
+
+  /**
+   * The maximum number of records to return.
    */
   limit?: number;
+
+  /**
+   * A list of {@link Property} definitions to be returned in the results.
+   */
+  return?: Property[];
 };

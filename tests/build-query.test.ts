@@ -44,15 +44,15 @@ test('spec and fluent match', t => {
 
   const q2 = new Query({
     collection: 'responses',
-    filters: [
+    filter: [
       { property: 'url.domain', in: ['example.com', 'test.com'] },
       { property: 'status', in: [200, 404], collected: true },
     ],
-    aggregates: [
+    aggregate: [
       { property: 'status', aggregate: 'collect' },
       { property: 'mime', aggregate: 'collect' },
     ],
-    sorts: [
+    sort: [
       { property: 'total', sort: 'desc' },
     ],
     count: 'total'
