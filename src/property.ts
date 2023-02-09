@@ -26,7 +26,7 @@ export type Property = {
    * The document variable this property belongs to. Only necessary when constructing
    * complex, multi-collection queries.
    *
-   * @defaultValue 'item'
+   * @defaultValue `item`
    */
   document?: string;
 
@@ -66,9 +66,9 @@ export type Aggregate = Property & {
   /**
    * An aggregation function to apply to the property. Supported values:
    *
-   * - group:    Distinct values of this property will be collected to group
+   * - collect:  Distinct values of this property will be collected to group
    *             other properties' aggregate values. If any aggregate properties
-   *             exist in a query, vanilla properties are treated as 'group'
+   *             exist in a query, vanilla properties are treated as 'collect'
    *             aggregates.
    * - empty:    The number of empty (null or zero-length array) values
    * - nonempty: The number of non-empty (non-null or 1+ length array) values
@@ -92,6 +92,11 @@ export type Sort = Property & {
 };
 
 export type Filter = Property & {
+  /**
+   * If true, the filter will be applied after any collect or aggregation functions.
+   * 
+   * @defaultValue `false` 
+   */
   collected?: boolean,
 
   /**

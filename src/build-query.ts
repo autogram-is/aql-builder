@@ -3,20 +3,23 @@ import { GeneratedAqlQuery, literal, join } from 'arangojs/aql.js';
 import { Property, Aggregate, aggregateMap, Filter } from './property.js';
 import { QuerySpec } from './query-spec.js';
 
-export function labelify(input: string, replacement = '_') {
-  return input.replaceAll(/[[\].-\s@]/g, replacement);
-}
-
+/**
+ * Given a QuerySpec object, build an executable GeneratedAqlQuery.
+ */
 export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
+  // We use key/value pairs to accumulate properties and assignments that
+  // must be unique in the final query.
   const collected: Record<string, string> = {};
   const aggregated: Record<string, string> = {};
   const document: Record<string, string> = {};
 
+  // An array of GneratedAqlQueries we can fill as we build out the query
   const querySegments: GeneratedAqlQuery[] = [];
   querySegments.push(aql`FOR item IN ${literal(spec.collection)}`);
 
   // If we're doing any collect or aggregation queries, turn the properties
-  // into collects.
+  // into collects — otherwise, they'd disappear after the collect statement
+  // resets the query's local variables.
   if (spec.aggregates?.length) {
     const coerced: Aggregate[] =
       spec.properties
@@ -28,6 +31,8 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     spec.properties = undefined;
   }
 
+  // If there are still properties left, we add them to the final
+  // returned result collection.
   for (const p of spec.properties ?? []) {
     const path = renderPath(p);
     if (p.label !== false) {
@@ -36,6 +41,8 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     }
   }
 
+  // Loop through the aggregates, splitting out 'collect' assignments
+  // (equivalent to SQL's GROUP BY) from the aggregation functions.
   for (const p of spec.aggregates ?? []) {
     const path = renderPath(p);
     if (p.label !== false) {
@@ -50,10 +57,14 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     }
   }
 
+  // Add any filters that should apply *before* the collect statement.
   for (const p of spec.filters ?? []) {
     if (p.collected !== true) querySegments.push(...wrapFilter(p));
   }
 
+  // If there are any COLLECT assignments, or any AGGREGATE statements,
+  // we need to start the COLLECT section and start stacking the individual
+  // clauses.
   if (Object.entries(aggregated).length > 0 || Object.entries(collected).length > 0) {
     querySegments.push(aql`COLLECT`);
     querySegments.push(
@@ -65,6 +76,7 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     );
   }
 
+  // If aggregation functions are being used, start an AGGREGATE section
   if (Object.entries(aggregated).length > 0) {
     querySegments.push(aql`AGGREGATE`);
     querySegments.push(
@@ -76,6 +88,8 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     );
   }
 
+  // If any COLLECT or AGGREGATE properties are used, and the 'count' property
+  // isn't set to false, wrap up the COLLECT section, ala WITH COUNT INTO…
   if (Object.entries(aggregated).length > 0 || Object.entries(collected).length > 0) {
     if (spec.count !== false) {
       querySegments.push(aql`WITH COUNT INTO ${literal(spec.count ?? 'total')}`);
@@ -83,17 +97,19 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     }
   }
 
+  // Add any filters that should apply after the collection is done
   for (const p of spec.filters ?? []) {
     if (p.collected === true) querySegments.push(...wrapFilter(p));
   }
 
+  // Add a LIMIT statement if a max number of records was specified.
   if (spec.limit && spec.limit > 0) {
     querySegments.push(aql`LIMIT ${spec.limit}`);
   }
 
-
+  // Finally, build out the RETURN clause and join the various AQL 
+  // fragments together, returning the finaly GeneratedAqlQuery.
   querySegments.push(renderReturn(document));
-
   return aql`${join(querySegments, '\n')}`;
 }
 
@@ -184,4 +200,8 @@ function renderPath(p: Property | Filter): string {
   } else {
     return p.document ?? 'item' + '.' + p.property;
   }
+}
+
+export function labelify(input: string, replacement = '_') {
+  return input.replaceAll(/[[\].-\s@]/g, replacement);
 }

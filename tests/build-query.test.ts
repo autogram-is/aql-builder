@@ -10,6 +10,7 @@ test('query renders correctly', t => {
     mime = item.mime
   WITH COUNT INTO total
   FILTER status IN @value1
+  SORT total DESC
   RETURN {
     status,
     mime,
@@ -22,8 +23,7 @@ test('query renders correctly', t => {
     .groupBy('mime')
     .count('total')
     .filter('status', [200, 404])
-    .sort('url.domain', 'asc')
-    .sort('total', 'asc')
+    .sort('total', 'desc')
     .build();
 
   const qt = q.query.trim().replaceAll(/[\r\s]+/g, ' ');
@@ -39,8 +39,7 @@ test('spec and fluent match', t => {
     .groupBy('mime')
     .count('total')
     .filter('status', [200, 404])
-    .sort('url.domain', 'asc')
-    .sort('total', 'asc')
+    .sort('total', 'desc')
     .build();
 
   const q2 = new Query({
@@ -52,6 +51,9 @@ test('spec and fluent match', t => {
     aggregates: [
       { property: 'status', aggregate: 'collect' },
       { property: 'mime', aggregate: 'collect' },
+    ],
+    sorts: [
+      { property: 'total', sort: 'desc' },
     ],
     count: 'total'
   }).build();
