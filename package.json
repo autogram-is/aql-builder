@@ -1,6 +1,6 @@
 {
   "name": "aql-builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Dynamic query-builder for ArangoDB",
   "main": "dist/index.js",
   "engines": {
@@ -27,7 +27,11 @@
     "startup": "docker-compose up -d",
     "shutdown": "docker-compose stop",
     "test": "ava",
-    "build": "tsc"
+    "clean": "rm -rf ./dist; rm ./tsconfig.build.tsbuildinfo",
+    "build": "tsc -p ./tsconfig.build.json",
+    "prebuild": "npm run clean",
+    "publish": "npm publish",
+    "prepublish": "npm run test; npm run lint; npm run build"
   },
   "devDependencies": {
     "@ava/typescript": "^3.0.1",

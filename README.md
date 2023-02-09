@@ -50,6 +50,6 @@ const aqlQuery = buildQuery(qs);
 
 ## Limitations
 
-For the time being, AQL Builder only support simple queries that operate on a single collection without any joins or subqueries. It doesn't support explicit construction of return documents with nested properties, though it does allow you to select properties that are arrays or objects.
+For the time being, AQL Builder only supports simple queries that operate on a single collection without any joins or subqueries. It doesn't support explicit construction of return documents with nested properties, though it does allow you to select properties that are arrays or objects.
 
 AQL functions can't be used when adding individual properties; the aggregate functions like SUM() and MAX() are handled as one-offs by the aggregate code; if you need something more complex, writing your own AQL isnt much more complicated than tweaking the complex JSON that would be necessary to define it.
