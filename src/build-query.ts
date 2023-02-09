@@ -216,7 +216,7 @@ function wrapFilter(p: Filter) {
 
 function renderReturn(document: Record<string, string>): GeneratedAqlQuery {
   const entries = Object.entries(document);
-  if (entries.length === 0) return aql``;
+  if (entries.length === 0) return aql`RETURN item`;
   if (entries.length === 1) return aql`RETURN ${literal(entries[0][1])}`;
   const l = literal(
     entries
