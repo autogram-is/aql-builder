@@ -164,9 +164,6 @@ function wrapAggregate(p: Aggregate) {
   } else {
     return aggregateMap[p.aggregate](path);
   }
-
-  // If something went wrong, fall back to count nonempty.
-  return aggregateMap['nonempty'](path);
 }
 
 function wrapFilter(p: Filter) {
@@ -241,5 +238,5 @@ function renderPath(p: Property | Filter | Aggregate | Sort): string {
 }
 
 export function labelify(input: string, replacement = '_') {
-  return input.replaceAll(/[[\].-\s@]/g, replacement);
+  return input.replace(/[[\].-\s@]/g, replacement);
 }

@@ -20,8 +20,8 @@ test('render from spec', t => {
     count: false
   }
 
-  const q = buildQuery(spec).query.trim().replaceAll(/[\r\s]+/g, ' ');
-  const e = expected.trim().replaceAll(/[\r\s]+/g, ' ');
+  const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
+  const e = expected.trim().replace(/[\r\s]+/g, ' ');
 
   t.assert(q == e);
 });
@@ -39,8 +39,8 @@ test('render with total', t => {
     aggregate: [{ property: 'prop1', aggregate: 'collect' }]
   }
 
-  const q = buildQuery(spec).query.trim().replaceAll(/[\r\s]+/g, ' ');
-  const e = expected.trim().replaceAll(/[\r\s]+/g, ' ');
+  const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
+  const e = expected.trim().replace(/[\r\s]+/g, ' ');
 
   t.assert(q == e);
 });

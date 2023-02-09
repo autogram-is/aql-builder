@@ -4,9 +4,22 @@
   "description": "Dynamic query-builder for ArangoDB",
   "main": "dist/index.js",
   "engines": {
-    "node": "^18.1.0"
+    "node": ">=14"
   }, 
   "type": "module",
+  "author": {
+    "name": "Jeff Eaton",
+    "email": "jeff@autogram.is",
+    "url": "http://eaton.fyi"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/autogram-is/aql-builder"
+  },
+  "bugs": {
+    "url": "https://github.com/autogram-is/aql-builder/issues"
+  },
   "scripts": {
     "lint": "eslint . --ext .ts",
     "format": "prettier --config .prettierrc 'src/**/*.ts' --write",
@@ -29,7 +42,7 @@
     "ts-node": "^10.8.0",
     "typescript": "^4.9.4"
   },
-  "dependencies": {
+  "peer-dependencies": {
     "arangojs": "^8.1.0"
   }
 }

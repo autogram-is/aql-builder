@@ -107,7 +107,7 @@ export class Query {
   }
 
   collect(property: string | Aggregate, label?: string): this {
-    return this.aggregate(property, label, 'collect' );
+    return this.aggregate(property, label, 'collect');
   }
 
   aggregate(

@@ -26,8 +26,8 @@ test('query renders correctly', t => {
     .sort('total', 'desc')
     .build();
 
-  const qt = q.query.trim().replaceAll(/[\r\s]+/g, ' ');
-  const rt = rendered.trim().replaceAll(/[\r\s]+/g, ' ');
+  const qt = q.query.trim().replace(/[\r\s]+/g, ' ');
+  const rt = rendered.trim().replace(/[\r\s]+/g, ' ');
 
   t.assert(qt === rt);
 });
