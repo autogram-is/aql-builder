@@ -94,39 +94,39 @@ export type Sort = Property & {
 export type Filter = Property & {
   /**
    * If true, the filter will be applied after any collect or aggregation functions.
-   * 
-   * @defaultValue `false` 
+   *
+   * @defaultValue `false`
    */
-  collected?: boolean,
+  collected?: boolean;
 
   /**
    * Filters the query result to documents where the property is **equal to** the specified value.
    */
-  eq?: JsonPrimitive,
+  eq?: JsonPrimitive;
 
   /**
    * Filters the query result to documents where the property is **less than** to the specified value.
    */
-  lt?: string | number,
+  lt?: string | number;
 
   /**
    * Filters the query result to documents where the property is **greater than** to the specified value.
    */
-  gt?: string | number,
+  gt?: string | number;
 
   /**
    * Filters the query result to documents where the property is **one of the specified values**.
    */
-  in?: JsonPrimitive[],
+  in?: JsonPrimitive[];
 
   /**
    * Filters the query result to documents where the property is an array that **contains the specified value**.
    */
-  contains?: JsonPrimitive,
+  contains?: JsonPrimitive;
 
   /**
    * Negates the effect of any filter conditions; for example, an `eq` condition
    * becomes `!=` rather than `==` in the final AQL query.
    */
-  negate?: true,
+  negate?: true;
 };

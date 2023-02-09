@@ -1,6 +1,13 @@
 import { aql } from 'arangojs';
 import { GeneratedAqlQuery, literal, join } from 'arangojs/aql.js';
-import { Property, Aggregate, aggregateMap, Filter } from './property.js';
+import {
+  Property,
+  Aggregate,
+  aggregateMap,
+  sortMap,
+  Filter,
+  Sort,
+} from './property.js';
 import { QuerySpec } from './query-spec.js';
 
 /**
@@ -65,14 +72,18 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
   // If there are any COLLECT assignments, or any AGGREGATE statements,
   // we need to start the COLLECT section and start stacking the individual
   // clauses.
-  if (Object.entries(aggregated).length > 0 || Object.entries(collected).length > 0) {
+  if (
+    Object.entries(aggregated).length > 0 ||
+    Object.entries(collected).length > 0
+  ) {
     querySegments.push(aql`COLLECT`);
     querySegments.push(
       join(
         Object.entries(collected).map(
-          ([label, path]) => aql`  ${literal(label)} = ${literal(path)}`
+          ([label, path]) => aql`  ${literal(label)} = ${literal(path)}`,
         ),
-      ",\n")
+        ',\n',
+      ),
     );
   }
 
@@ -82,17 +93,23 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     querySegments.push(
       join(
         Object.entries(aggregated).map(
-          ([label, path]) => aql`  ${literal(label)} = ${literal(path)}`
+          ([label, path]) => aql`  ${literal(label)} = ${literal(path)}`,
         ),
-      ',\n')
+        ',\n',
+      ),
     );
   }
 
   // If any COLLECT or AGGREGATE properties are used, and the 'count' property
   // isn't set to false, wrap up the COLLECT section, ala WITH COUNT INTO…
-  if (Object.entries(aggregated).length > 0 || Object.entries(collected).length > 0) {
+  if (
+    Object.entries(aggregated).length > 0 ||
+    Object.entries(collected).length > 0
+  ) {
     if (spec.count !== false) {
-      querySegments.push(aql`WITH COUNT INTO ${literal(spec.count ?? 'total')}`);
+      querySegments.push(
+        aql`WITH COUNT INTO ${literal(spec.count ?? 'total')}`,
+      );
       document[spec.count ?? 'total'] = spec.count ?? 'total';
     }
   }
@@ -107,12 +124,25 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     querySegments.push(aql`LIMIT ${spec.limit}`);
   }
 
-  // Finally, build out the RETURN clause and join the various AQL 
+  if (spec.sorts === null) {
+    querySegments.push(aql`SORT null`);
+  } else {
+    for (const p of spec.sorts ?? []) {
+      const path = renderPath({
+        collected: spec.aggregates?.length ? true : false,
+        ...p,
+      });
+      querySegments.push(
+        aql`SORT ${literal(path)} ${literal(sortMap[p.sort])}`,
+      );
+    }
+  }
+
+  // Finally, build out the RETURN clause and join the various AQL
   // fragments together, returning the finaly GeneratedAqlQuery.
   querySegments.push(renderReturn(document));
   return aql`${join(querySegments, '\n')}`;
 }
-
 
 /**
  * Given an Aggregate Property definition, the right side of an AQL
@@ -121,7 +151,10 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
 function wrapAggregate(p: Aggregate) {
   const path = renderPath(p);
 
-  if (['min', 'max', 'sum', 'avg'].includes(p.aggregate) && p.type !== 'number') {
+  if (
+    ['min', 'max', 'sum', 'avg'].includes(p.aggregate) &&
+    p.type !== 'number'
+  ) {
     return aggregateMap[p.aggregate](`LENGTH(${path})`);
   } else {
     return aggregateMap[p.aggregate](path);
@@ -131,10 +164,8 @@ function wrapAggregate(p: Aggregate) {
   return aggregateMap['nonempty'](path);
 }
 
-function wrapFilter(p: Filter, collected = false) {
-  const label = p.label
-    ? labelify(p.label)
-    : renderPath(p);
+function wrapFilter(p: Filter) {
+  const label = p.label ? labelify(p.label) : renderPath(p);
 
   const conditions: GeneratedAqlQuery[] = [];
   if (p.eq !== undefined) {
@@ -186,15 +217,17 @@ function renderReturn(document: Record<string, string>): GeneratedAqlQuery {
   if (entries.length === 0) return aql``;
   if (entries.length === 1) return aql`RETURN ${literal(entries[0][1])}`;
   const l = literal(
-    entries.map(entry => {
-      if (entry[0] === entry[1]) return `  ${entry[0]}`;
-      else return `  ${entry[0]}: ${entry[1]}`;
-    }).join(',\n')
+    entries
+      .map(entry => {
+        if (entry[0] === entry[1]) return `  ${entry[0]}`;
+        else return `  ${entry[0]}: ${entry[1]}`;
+      })
+      .join(',\n'),
   );
   return aql`RETURN {\n${l}\n}`;
 }
 
-function renderPath(p: Property | Filter): string {
+function renderPath(p: Property | Filter | Aggregate | Sort): string {
   if ('collected' in p && p.collected === true) {
     return p.property;
   } else {

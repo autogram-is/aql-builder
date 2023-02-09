@@ -80,7 +80,7 @@ export class Query {
     if (typeof property === 'string') {
       if (value === undefined) {
         this.spec.filters.push({
-          collected: (this.aggregate.length > 0 || this.collect.length > 0) ? false : undefined,
+          collected: this.spec.aggregates?.length ? true : false,
           label: false,
           property: property,
           eq: null,
@@ -88,21 +88,21 @@ export class Query {
         });
       } else if (Array.isArray(value)) {
         this.spec.filters.push({
-          collected: (this.spec.aggregates?.length) ? true : false,
+          collected: this.spec.aggregates?.length ? true : false,
           label: false,
           property: property,
           in: value,
         });
       } else {
         this.spec.filters.push({
-          collected: (this.spec.aggregates?.length) ? true : false,
+          collected: this.spec.aggregates?.length ? true : false,
           label: false,
           property: property,
           eq: value,
         });
       }
     } else {
-      const collected = (this.spec.aggregates?.length) ? false : undefined;
+      const collected = this.spec.aggregates?.length ? true : false;
       this.spec.filters.push({ collected, ...property });
     }
     return this;
