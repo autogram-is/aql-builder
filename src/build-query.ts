@@ -8,7 +8,7 @@ import {
   AqFilter,
   AqSort,
 } from './property.js';
-import { AqQuery } from './query-spec.js';
+import { AqQuery } from './query.js';
 import { isArangoCollection } from 'arangojs/collection.js';
 
 /**

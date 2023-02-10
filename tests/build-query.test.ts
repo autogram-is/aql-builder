@@ -1,5 +1,5 @@
 import test from 'ava';
-import { AqBuilder } from '../src/query.js';
+import { AqBuilder } from '../src/builder.js';
 
 test('query renders correctly', t => {
   const rendered = `

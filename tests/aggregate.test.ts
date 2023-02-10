@@ -1,5 +1,5 @@
 import test from 'ava';
-import { AqQuery } from '../src/query-spec.js';
+import { AqQuery } from '../src/query.js';
 import { buildQuery } from '../src/build-query.js';
 
 test('render from spec', t => {
