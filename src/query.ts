@@ -59,38 +59,57 @@ export type AqPropertyNameAndPath = [label: string, path: string];
  * A strict version of AqQuery that doesn't support shorthand property
  * syntax for filters, aggregates, sorts, or return values.
  */
-export type AqStrict = Omit<AqQuery, 'filters' | 'aggregates' | 'sorts' | 'return'> & {  
+export type AqStrict = Omit<
+  AqQuery,
+  'filters' | 'aggregates' | 'sorts' | 'return'
+> & {
   filters?: AqFilter[];
   aggregates?: AqAggregate[];
   sorts?: AqSort[] | null;
   return?: AqProperty[];
-}
+};
 
 export function expandAqShorthand(input: AqQuery) {
   if (input.filters) {
-    for (let i = 0; i < input.filters.length; i++) { 
+    for (let i = 0; i < input.filters.length; i++) {
       const val = input.filters[i];
       if (typeof val === 'string') {
-        input.filters[i] = { property: val, eq: null, negate: true } as AqFilter;
+        input.filters[i] = {
+          property: val,
+          eq: null,
+          negate: true,
+        } as AqFilter;
       } else if (Array.isArray(val)) {
-        input.filters[i] = { label: val[0], property: val[1], eq: null, negate: true } as AqFilter;
+        input.filters[i] = {
+          label: val[0],
+          property: val[1],
+          eq: null,
+          negate: true,
+        } as AqFilter;
       }
     }
   }
 
   if (input.aggregates) {
-    for (let i = 0; i < input.aggregates.length; i++) { 
+    for (let i = 0; i < input.aggregates.length; i++) {
       const val = input.aggregates[i];
       if (typeof val === 'string') {
-        input.aggregates[i] = { property: val, aggregate: 'collect' } as AqAggregate;
+        input.aggregates[i] = {
+          property: val,
+          aggregate: 'collect',
+        } as AqAggregate;
       } else if (Array.isArray(val)) {
-        input.aggregates[i] = { label: val[0], property: val[1], aggregate: 'collect' } as AqAggregate;
+        input.aggregates[i] = {
+          label: val[0],
+          property: val[1],
+          aggregate: 'collect',
+        } as AqAggregate;
       }
     }
   }
 
   if (input.sorts) {
-    for (let i = 0; i < input.sorts.length; i++) { 
+    for (let i = 0; i < input.sorts.length; i++) {
       const val = input.sorts[i];
       if (typeof val === 'string') {
         input.sorts[i] = { property: val, direction: 'desc' } as AqSort;
@@ -99,7 +118,7 @@ export function expandAqShorthand(input: AqQuery) {
   }
 
   if (input.return) {
-    for (let i = 0; i < input.return.length; i++) { 
+    for (let i = 0; i < input.return.length; i++) {
       const val = input.return[i];
       if (typeof val === 'string') {
         input.return[i] = { property: val } as AqProperty;

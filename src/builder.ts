@@ -67,7 +67,7 @@ export class AqBuilder {
   /**
    * Returns a new {@link AqBuilder} containing a buildable {@link AqStrict}.
    */
-  constructor(input: string | ArangoCollection | AqStrict | AqQuery ) {
+  constructor(input: string | ArangoCollection | AqStrict | AqQuery) {
     if (isArangoCollection(input)) {
       this.spec = { collection: input };
     } else if (typeof input === 'string') {
@@ -164,7 +164,10 @@ export class AqBuilder {
     return this;
   }
 
-  sortBy(property: string | null | AqSort, direction: SortDirection = 'asc'): this {
+  sortBy(
+    property: string | null | AqSort,
+    direction: SortDirection = 'asc',
+  ): this {
     this.spec.sorts ??= [];
     if (property === null) {
       this.spec.sorts = null;
