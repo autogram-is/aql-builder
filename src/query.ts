@@ -1,37 +1,37 @@
 import { GeneratedAqlQuery } from 'arangojs/aql.js';
 import {
-  Property,
-  Aggregate,
-  Sort,
-  Filter,
+  AqProperty,
+  AqAggregate,
+  AqSort,
+  AqFilter,
   SortDirection,
   AggregateFunction,
 } from './property.js';
-import { QuerySpec } from './query-spec.js';
+import { AqQuery } from './query-spec.js';
 import { labelify, buildQuery } from './build-query.js';
 import { JsonPrimitive } from '@salesforce/ts-types';
 import { ArangoCollection, isArangoCollection } from 'arangojs/collection.js';
 
 /**
- * A fluent wrapper for a {@link QuerySpec} structure, with functions to build
+ * A fluent wrapper for a {@link AqQuery} structure, with functions to build
  * a {@link GeneratedAqlQuery} object from the spec.
  *
  * @example Fluent chainable methods
  * ```
- * const generatedAql = new Query('my_collection')
- *   .filter('property.nestedProperty', 'value')
- *   .sort('prop3', 'asc')
+ * const generatedAql = new AqBuilder('my_collection')
+ *   .filterBy('property.nestedProperty', 'value')
+ *   .sortBy('prop3', 'asc')
  *   .limit(100)
  *   .return('prop1')
  *   .return('prop2', 'customLabel')
  *   .build();
  * ```
- * @example QuerySpec structure
+ * @example AqQuery structure
  * ```
- * const generatedAql = Query.build({
+ * const generatedAql = AqBuilder.build({
  *   collection: 'my_collection',
  *   filters: [{ property: 'property.nestedProperty', eq: 'value'}],
- *   sort: [{ property: 'prop3', direction: 'asc' }],
+ *   sorts: [{ property: 'prop3', direction: 'asc' }],
  *   limit: 100,
  *   return: [
  *     { property: 'prop1' },
@@ -40,24 +40,24 @@ import { ArangoCollection, isArangoCollection } from 'arangojs/collection.js';
  * });
  * ```
  */
-export class Query {
+export class AqBuilder {
   /**
    * A JSON structure defining the Query's properties, filters, sorts, etc.
    *
-   * Although it may be altered directly, the {@link Query} class's chainable
+   * Although it may be altered directly, the {@link AqBuilder} class's chainable
    * methods are the intended mechanism for building and managing its spec structure.
    */
-  spec: QuerySpec;
+  spec: AqQuery;
 
   /**
    * Convenience wrapper for the {@link buildQuery} function.
    */
-  static build(input: QuerySpec): GeneratedAqlQuery {
+  static build(input: AqQuery): GeneratedAqlQuery {
     return buildQuery(input);
   }
 
   /**
-   * Builds a {@link GeneratedAqlQuery} based on the instance's {@link QuerySpec}.
+   * Builds a {@link GeneratedAqlQuery} based on the instance's {@link AqQuery}.
    */
   build(): GeneratedAqlQuery {
     // Instantiate a query, build the AQL, execute it, and return.
@@ -65,9 +65,9 @@ export class Query {
   }
 
   /**
-   * Returns a new {@link Query} containing a buildable {@link QuerySpec}.
+   * Returns a new {@link AqBuilder} containing a buildable {@link AqQuery}.
    */
-  constructor(input: string | ArangoCollection | QuerySpec) {
+  constructor(input: string | ArangoCollection | AqQuery) {
     if (isArangoCollection(input)) {
       this.spec = { collection: input };
     } else if (typeof input === 'string') {
@@ -78,14 +78,14 @@ export class Query {
   }
 
   /**
-   * Adds a {@link Property} to the document returned by the query.
+   * Adds a {@link AqProperty} to the document returned by the query.
    *
    * @remarks
-   * If any {@link Aggregate} properties exist on the query, these
+   * If any {@link AqAggregate} properties exist on the query, these
    * properties will be transformed into COLLECT assignments when
    * the final query is built.
    */
-  return(property: string | Property, label?: string): this {
+  return(property: string | AqProperty, label?: string): this {
     this.spec.return ??= [];
     if (typeof property === 'string') {
       if (label) {
@@ -102,79 +102,79 @@ export class Query {
     return this;
   }
 
-  groupBy(property: string | Aggregate, label?: string): this {
+  groupBy(property: string | AqAggregate, label?: string): this {
     return this.collect(property, label);
   }
 
-  collect(property: string | Aggregate, label?: string): this {
+  collect(property: string | AqAggregate, label?: string): this {
     return this.aggregate(property, label, 'collect');
   }
 
   aggregate(
-    property: string | Aggregate,
+    property: string | AqAggregate,
     label?: string,
     aggregate: AggregateFunction = 'collect',
   ): this {
-    this.spec.aggregate ??= [];
+    this.spec.aggregates ??= [];
     if (typeof property === 'string') {
-      this.spec.aggregate.push({
+      this.spec.aggregates.push({
         label: label ? labelify(label) : labelify(property),
         property: property,
         aggregate,
       });
     } else {
-      this.spec.aggregate.push({ ...property, label, aggregate });
+      this.spec.aggregates.push({ ...property, label, aggregate });
     }
     return this;
   }
 
-  filter(
-    property: string | Filter,
+  filterBy(
+    property: string | AqFilter,
     value?: JsonPrimitive | JsonPrimitive[],
   ): this {
-    this.spec.filter ??= [];
+    this.spec.filters ??= [];
     if (typeof property === 'string') {
       if (value === undefined) {
-        this.spec.filter.push({
-          collected: this.spec.aggregate?.length ? true : false,
+        this.spec.filters.push({
+          collected: this.spec.aggregates?.length ? true : false,
           label: false,
           property,
           eq: null,
           negate: true,
         });
       } else if (Array.isArray(value)) {
-        this.spec.filter.push({
+        this.spec.filters.push({
           property,
           label: false,
           in: value,
-          collected: this.spec.aggregate?.length ? true : false,
+          collected: this.spec.aggregates?.length ? true : false,
         });
       } else {
-        this.spec.filter.push({
+        this.spec.filters.push({
           property,
           label: false,
           eq: value,
-          collected: this.spec.aggregate?.length ? true : false,
+          collected: this.spec.aggregates?.length ? true : false,
         });
       }
     } else {
-      const collected = this.spec.aggregate?.length ? true : false;
-      this.spec.filter.push({ ...property, collected });
+      const collected = this.spec.aggregates?.length ? true : false;
+      this.spec.filters.push({ ...property, collected });
     }
     return this;
   }
 
-  sort(property: string | null | Sort, direction: SortDirection = 'asc'): this {
-    this.spec.sort ??= [];
+  sortBy(property: string | null | AqSort, direction: SortDirection = 'asc'): this {
+    this.spec.sorts ??= [];
     if (property === null) {
-      this.spec.sort = null;
+      this.spec.sorts = null;
     } else if (typeof property === 'string') {
-      this.spec.sort.push({
+      this.spec.sorts.push({
         property,
-        sort: direction,
+        direction: direction,
       });
     } else {
-      this.spec.sort.push(property);
+      this.spec.sorts.push(property);
     }
     return this;
   }

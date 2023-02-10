@@ -13,35 +13,35 @@ AQL Builder supports two modes: you can build a JSON 'query spec' and generate A
 ### Fluent
 
 ```typescript
-import { Query } from 'aql-builder';
+import { AqBuilder } from 'aql-builder';
 
-const aqlQuery = new Query('responses')
-  .filter('url.domain', ['example.com', 'test.com'])
+const aqlQuery = new AqBuilder('responses')
+  .filterBy('url.domain', ['example.com', 'test.com'])
   .groupBy('status')
   .groupBy('mime')
   .count('total')
-  .filter('status', [200, 404])
-  .sort('total', 'desc')
+  .filterBy('status', [200, 404])
+  .sortBy('total', 'desc')
   .build();
 ```
 
 ### Query Spec
 
 ```typescript
-import { QuerySpec, buildQuery } from 'aql-builder';
+import { AqQuery, buildQuery } from 'aql-builder';
 
-const qs: QuerySpec = {
+const qs: AqQuery = {
   collection: 'responses',
-  filter: [
+  filters: [
     { property: 'url.domain', in: ['example.com', 'test.com'] },
     { property: 'status', in: [200, 404], collected: true },
   ],
-  aggregate: [
+  aggregates: [
     { property: 'status', aggregate: 'collect' },
     { property: 'mime', aggregate: 'collect' },
   ],
-  sort: [
-    { property: 'total', sort: 'desc' },
+  sorts: [
+    { property: 'total', direction: 'desc' },
   ],
   count: 'total'
 };

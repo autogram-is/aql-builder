@@ -1,20 +1,20 @@
 import { aql } from 'arangojs';
 import { GeneratedAqlQuery, literal, join } from 'arangojs/aql.js';
 import {
-  Property,
-  Aggregate,
+  AqProperty,
+  AqAggregate,
   aggregateMap,
   sortMap,
-  Filter,
-  Sort,
+  AqFilter,
+  AqSort,
 } from './property.js';
-import { QuerySpec } from './query-spec.js';
+import { AqQuery } from './query-spec.js';
 import { isArangoCollection } from 'arangojs/collection.js';
 
 /**
- * Given a QuerySpec object, build an executable GeneratedAqlQuery.
+ * Given an AqQuery object, build an executable GeneratedAqlQuery.
  */
-export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
+export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
   // We use key/value pairs to accumulate properties and assignments that
   // must be unique in the final query.
   const collected: Record<string, string> = {};
@@ -32,14 +32,14 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
   // If we're doing any collect or aggregation queries, turn the properties
   // into collects — otherwise, they'd disappear after the collect statement
   // resets the query's local variables.
-  if (spec.aggregate?.length) {
-    const coerced: Aggregate[] =
+  if (spec.aggregates?.length) {
+    const coerced: AqAggregate[] =
       spec.return
         ?.filter(p => p.label !== false)
         .map(p => {
-          return { ...p, aggregate: 'collect' } as Aggregate;
+          return { ...p, aggregate: 'collect' } as AqAggregate;
         }) ?? [];
-    spec.aggregate.push(...coerced);
+    spec.aggregates.push(...coerced);
     spec.return = undefined;
   }
 
@@ -55,7 +55,7 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
 
   // Loop through the aggregates, splitting out 'collect' assignments
   // (equivalent to SQL's GROUP BY) from the aggregation functions.
-  for (const p of spec.aggregate ?? []) {
+  for (const p of spec.aggregates ?? []) {
     const path = renderPath(p);
     if (p.label !== false) {
       const label = p.label ? labelify(p.label) : labelify(p.property);
@@ -70,7 +70,7 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
   }
 
   // Add any filters that should apply *before* the collect statement.
-  for (const p of spec.filter ?? []) {
+  for (const p of spec.filters ?? []) {
     if (p.collected !== true) querySegments.push(...wrapFilter(p));
   }
 
@@ -120,7 +120,7 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
   }
 
   // Add any filters that should apply after the collection is done
-  for (const p of spec.filter ?? []) {
+  for (const p of spec.filters ?? []) {
     if (p.collected === true) querySegments.push(...wrapFilter(p));
   }
 
@@ -129,16 +129,16 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
     querySegments.push(aql`LIMIT ${spec.limit}`);
   }
 
-  if (spec.sort === null) {
+  if (spec.sorts === null) {
     querySegments.push(aql`SORT null`);
   } else {
-    for (const p of spec.sort ?? []) {
+    for (const p of spec.sorts ?? []) {
       const path = renderPath({
-        collected: spec.aggregate?.length ? true : false,
+        collected: spec.aggregates?.length ? true : false,
         ...p,
       });
       querySegments.push(
-        aql`SORT ${literal(path)} ${literal(sortMap[p.sort])}`,
+        aql`SORT ${literal(path)} ${literal(sortMap[p.direction])}`,
       );
     }
   }
@@ -150,10 +150,10 @@ export function buildQuery(spec: QuerySpec): GeneratedAqlQuery {
 }
 
 /**
- * Given an Aggregate Property definition, the right side of an AQL
+ * Given an AqAggregate definition, generate the right side of an AQL
  * aggregate assignment.
  */
-function wrapAggregate(p: Aggregate) {
+function wrapAggregate(p: AqAggregate) {
   const path = renderPath(p);
 
   if (
@@ -166,7 +166,7 @@ function wrapAggregate(p: Aggregate) {
   }
 }
 
-function wrapFilter(p: Filter) {
+function wrapFilter(p: AqFilter) {
   const label = p.label ? labelify(p.label) : renderPath(p);
 
   const conditions: GeneratedAqlQuery[] = [];
@@ -229,7 +229,7 @@ function renderReturn(document: Record<string, string>): GeneratedAqlQuery {
   return aql`RETURN {\n${l}\n}`;
 }
 
-function renderPath(p: Property | Filter | Aggregate | Sort): string {
+function renderPath(p: AqProperty | AqFilter | AqAggregate | AqSort): string {
   if ('collected' in p && p.collected === true) {
     return p.property;
   } else {

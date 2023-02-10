@@ -21,7 +21,7 @@ export const sortMap = {
 /**
  * Describes a property used in an Arango query.
  */
-export type Property = {
+export type AqProperty = {
   /**
    * The document variable this property belongs to. Only necessary when constructing
    * complex, multi-collection queries.
@@ -62,7 +62,7 @@ export type Property = {
   type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
 };
 
-export type Aggregate = Property & {
+export type AqAggregate = AqProperty & {
   /**
    * An aggregation function to apply to the property. Supported values:
    *
@@ -84,14 +84,14 @@ export type Aggregate = Property & {
   aggregate: AggregateFunction;
 };
 
-export type Sort = Property & {
+export type AqSort = AqProperty & {
   /**
    * Sort the final results by this property, in the direction specified.
    */
-  sort: SortDirection;
+  direction: SortDirection;
 };
 
-export type Filter = Property & {
+export type AqFilter = AqProperty & {
   /**
    * If true, the filter will be applied after any collect or aggregation functions.
    *

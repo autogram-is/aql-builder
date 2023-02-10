@@ -1,5 +1,5 @@
 import { ArangoCollection } from 'arangojs/collection.js';
-import { Property, Aggregate, Sort, Filter } from './property.js';
+import { AqProperty, AqAggregate, AqSort, AqFilter } from './property.js';
 
 /**
  * A structured description of a simple Arango query.
@@ -7,7 +7,7 @@ import { Property, Aggregate, Sort, Filter } from './property.js';
  * Although this format can't express AQL's full capabilities, it supports
  * the essentials:
  */
-export type QuerySpec = {
+export type AqQuery = {
   /**
    * The name of the collection to query, or a direct reference to an
    * {@link ArangoCollection} instance.
@@ -15,14 +15,14 @@ export type QuerySpec = {
   collection: string | ArangoCollection;
 
   /**
-   * A list of {@link Filter} properties to use when querying the collection.
+   * A list of {@link AqFilter} properties to use when querying the collection.
    */
-  filter?: Filter[];
+  filters?: AqFilter[];
 
   /**
-   * A list of {@link Aggregate} properties to group or aggregate results by.
+   * A list of {@link AqAggregate} properties to group or aggregate results by.
    */
-  aggregate?: Aggregate[];
+  aggregates?: AqAggregate[];
 
   /**
    * The label to use for record counts when building aggregate queries.
@@ -33,9 +33,9 @@ export type QuerySpec = {
   count?: string | false;
 
   /**
-   * A list of properties to {@link Sort} results by.
+   * A list of properties to {@link AqSort} results by.
    */
-  sort?: Sort[] | null;
+  sorts?: AqSort[] | null;
 
   /**
    * The maximum number of records to return.
@@ -43,7 +43,7 @@ export type QuerySpec = {
   limit?: number;
 
   /**
-   * A list of {@link Property} definitions to be returned in the results.
+   * A list of {@link AqProperty} definitions to be returned in the results.
    */
-  return?: Property[];
+  return?: AqProperty[];
 };

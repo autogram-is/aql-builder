@@ -1,5 +1,5 @@
 import test from 'ava';
-import { QuerySpec } from '../src/query-spec.js';
+import { AqQuery } from '../src/query-spec.js';
 import { buildQuery } from '../src/build-query.js';
 
 test('render from spec', t => {
@@ -10,9 +10,9 @@ test('render from spec', t => {
     RETURN { prop1, prop2, prop3 }
   `;
 
-  const spec: QuerySpec = {
+  const spec: AqQuery = {
     collection: 'collection',
-    aggregate: [
+    aggregates: [
       { property: 'prop1', aggregate: 'collect' },
       { property: 'prop2', aggregate: 'sum', type: 'number' },
       { property: 'prop3', aggregate: 'sum', type: 'string' }
@@ -34,9 +34,9 @@ test('render with total', t => {
     RETURN { prop1, total }
   `;
 
-  const spec: QuerySpec = {
+  const spec: AqQuery = {
     collection: 'collection',
-    aggregate: [{ property: 'prop1', aggregate: 'collect' }]
+    aggregates: [{ property: 'prop1', aggregate: 'collect' }]
   }
 
   const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
