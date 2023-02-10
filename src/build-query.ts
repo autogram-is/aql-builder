@@ -8,13 +8,14 @@ import {
   AqFilter,
   AqSort,
 } from './property.js';
-import { AqQuery } from './query.js';
+import { AqQuery, expandAqShorthand } from './query.js';
 import { isArangoCollection } from 'arangojs/collection.js';
 
 /**
  * Given an AqQuery object, build an executable GeneratedAqlQuery.
  */
 export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
+  const strictSpec = expandAqShorthand(spec);
   // We use key/value pairs to accumulate properties and assignments that
   // must be unique in the final query.
   const collected: Record<string, string> = {};
@@ -23,29 +24,29 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
 
   // An array of GneratedAqlQueries we can fill as we build out the query
   const querySegments: GeneratedAqlQuery[] = [];
-  if (isArangoCollection(spec.collection)) {
-    querySegments.push(aql`FOR item IN ${spec.collection}`);
+  if (isArangoCollection(strictSpec.collection)) {
+    querySegments.push(aql`FOR item IN ${strictSpec.collection}`);
   } else {
-    querySegments.push(aql`FOR item IN ${literal(spec.collection)}`);
+    querySegments.push(aql`FOR item IN ${literal(strictSpec.collection)}`);
   }
 
   // If we're doing any collect or aggregation queries, turn the properties
   // into collects — otherwise, they'd disappear after the collect statement
   // resets the query's local variables.
-  if (spec.aggregates?.length) {
+  if (strictSpec.aggregates?.length) {
     const coerced: AqAggregate[] =
-      spec.return
+      strictSpec.return
         ?.filter(p => p.label !== false)
         .map(p => {
           return { ...p, aggregate: 'collect' } as AqAggregate;
         }) ?? [];
-    spec.aggregates.push(...coerced);
-    spec.return = undefined;
+    strictSpec.aggregates.push(...coerced);
+    strictSpec.return = undefined;
   }
 
   // If there are still properties left, we add them to the final
   // returned result collection.
-  for (const p of spec.return ?? []) {
+  for (const p of strictSpec.return ?? []) {
     const path = renderPath(p);
     if (p.label !== false) {
       const label = p.label ? labelify(p.label) : labelify(p.property);
@@ -55,7 +56,7 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
 
   // Loop through the aggregates, splitting out 'collect' assignments
   // (equivalent to SQL's GROUP BY) from the aggregation functions.
-  for (const p of spec.aggregates ?? []) {
+  for (const p of strictSpec.aggregates ?? []) {
     const path = renderPath(p);
     if (p.label !== false) {
       const label = p.label ? labelify(p.label) : labelify(p.property);
@@ -70,7 +71,7 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
   }
 
   // Add any filters that should apply *before* the collect statement.
-  for (const p of spec.filters ?? []) {
+  for (const p of strictSpec.filters ?? []) {
     if (p.collected !== true) querySegments.push(...wrapFilter(p));
   }
 
@@ -111,30 +112,30 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
     Object.entries(aggregated).length > 0 ||
     Object.entries(collected).length > 0
   ) {
-    if (spec.count !== false) {
+    if (strictSpec.count !== false) {
       querySegments.push(
-        aql`WITH COUNT INTO ${literal(spec.count ?? 'total')}`,
+        aql`WITH COUNT INTO ${literal(strictSpec.count ?? 'total')}`,
       );
-      document[spec.count ?? 'total'] = spec.count ?? 'total';
+      document[strictSpec.count ?? 'total'] = strictSpec.count ?? 'total';
     }
   }
 
   // Add any filters that should apply after the collection is done
-  for (const p of spec.filters ?? []) {
+  for (const p of strictSpec.filters ?? []) {
     if (p.collected === true) querySegments.push(...wrapFilter(p));
   }
 
-  // Add a LIMIT statement if a max number of records was specified.
-  if (spec.limit && spec.limit > 0) {
-    querySegments.push(aql`LIMIT ${spec.limit}`);
+  // Add a LIMIT statement if a max number of records was strictSpecified.
+  if (strictSpec.limit && strictSpec.limit > 0) {
+    querySegments.push(aql`LIMIT ${strictSpec.limit}`);
   }
 
-  if (spec.sorts === null) {
+  if (strictSpec.sorts === null) {
     querySegments.push(aql`SORT null`);
   } else {
-    for (const p of spec.sorts ?? []) {
+    for (const p of strictSpec.sorts ?? []) {
       const path = renderPath({
-        collected: spec.aggregates?.length ? true : false,
+        collected: strictSpec.aggregates?.length ? true : false,
         ...p,
       });
       querySegments.push(

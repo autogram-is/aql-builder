@@ -10,12 +10,13 @@ A simple dynamic query-builder for ArangoDB, written in Typescript.
 
 AQL Builder supports two modes: you can build a JSON 'query spec' and generate AQL from it, or you can create a new Query object and chain method calls to assemble the query clause by clause.
 
-### Fluent
+### Fluent methods
 
 ```typescript
 import { AqBuilder } from 'aql-builder';
 
 const aqlQuery = new AqBuilder('responses')
+  .filterBy('url.protocol') // Defaults to '!= null'
   .filterBy('url.domain', ['example.com', 'test.com'])
   .groupBy('status')
   .groupBy('mime')
@@ -25,7 +26,7 @@ const aqlQuery = new AqBuilder('responses')
   .build();
 ```
 
-### Query Spec
+### AqQuery structure
 
 ```typescript
 import { AqQuery, buildQuery } from 'aql-builder';
@@ -33,6 +34,7 @@ import { AqQuery, buildQuery } from 'aql-builder';
 const qs: AqQuery = {
   collection: 'responses',
   filters: [
+    { property: 'url.protocol', eq: null, negate: true },
     { property: 'url.domain', in: ['example.com', 'test.com'] },
     { property: 'status', in: [200, 404], collected: true },
   ],
@@ -40,10 +42,35 @@ const qs: AqQuery = {
     { property: 'status', aggregate: 'collect' },
     { property: 'mime', aggregate: 'collect' },
   ],
+  count: 'total',
   sorts: [
     { property: 'total', direction: 'desc' },
   ],
-  count: 'total'
+};
+const aqlQuery = buildQuery(qs);
+```
+
+### AqQuery shorthand
+
+The `AqQuery` structure also supports shorthand versions of common filter, aggregate,
+sort, and return definitions in addition to the full structures from AqQuery.
+e.g., `return: [{ property: 'prop.name' }]` be written as `return: ['prop.name']`.
+
+These shorthand versions can be mixed and matched as needed.
+
+```typescript
+import { AqQuery, buildQuery } from 'aql-builder';
+
+const qs: AqQuery = {
+  collection: 'responses',
+  filters: [
+    'url.protocol', // Expanded to 'equals null, negated' filter
+    { property: 'url.domain', in: ['example.com', 'test.com'] },
+    { property: 'status', in: [200, 404], collected: true },
+  ],
+  aggregates: ['status', 'mime'], // Expanded to 'collect' aggregates
+  count: 'total',
+  sorts: ['total'] // Expanded to 'desc' sorts
 };
 const aqlQuery = buildQuery(qs);
 ```

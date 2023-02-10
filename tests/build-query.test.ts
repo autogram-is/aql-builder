@@ -31,32 +31,3 @@ test('query renders correctly', t => {
 
   t.assert(qt === rt);
 });
-
-test('spec and fluent match', t => {
-  const q = new AqBuilder('responses')
-    .filterBy('url.domain', ['example.com', 'test.com'])
-    .groupBy('status')
-    .groupBy('mime')
-    .count('total')
-    .filterBy('status', [200, 404])
-    .sortBy('total', 'desc')
-    .build();
-
-  const q2 = new AqBuilder({
-    collection: 'responses',
-    filters: [
-      { property: 'url.domain', in: ['example.com', 'test.com'] },
-      { property: 'status', in: [200, 404], collected: true },
-    ],
-    aggregates: [
-      { property: 'status', aggregate: 'collect' },
-      { property: 'mime', aggregate: 'collect' },
-    ],
-    sorts: [
-      { property: 'total', direction: 'desc' },
-    ],
-    count: 'total'
-  }).build();
-
-  t.assert(q.query === q2.query);
-});

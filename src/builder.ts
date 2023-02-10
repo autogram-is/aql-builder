@@ -7,13 +7,13 @@ import {
   SortDirection,
   AggregateFunction,
 } from './property.js';
-import { AqQuery } from './query.js';
+import { AqStrict, AqQuery, expandAqShorthand } from './query.js';
 import { labelify, buildQuery } from './build-query.js';
 import { JsonPrimitive } from '@salesforce/ts-types';
 import { ArangoCollection, isArangoCollection } from 'arangojs/collection.js';
 
 /**
- * A fluent wrapper for a {@link AqQuery} structure, with functions to build
+ * A fluent wrapper for a {@link AqStrict} structure, with functions to build
  * a {@link GeneratedAqlQuery} object from the spec.
  *
  * @example Fluent chainable methods
@@ -47,17 +47,17 @@ export class AqBuilder {
    * Although it may be altered directly, the {@link AqBuilder} class's chainable
    * methods are the intended mechanism for building and managing its spec structure.
    */
-  spec: AqQuery;
+  spec: AqStrict;
 
   /**
    * Convenience wrapper for the {@link buildQuery} function.
    */
-  static build(input: AqQuery): GeneratedAqlQuery {
-    return buildQuery(input);
+  static build(input: AqStrict | AqQuery): GeneratedAqlQuery {
+    return buildQuery(expandAqShorthand(input));
   }
 
   /**
-   * Builds a {@link GeneratedAqlQuery} based on the instance's {@link AqQuery}.
+   * Builds a {@link GeneratedAqlQuery} based on the instance's {@link AqStrict}.
    */
   build(): GeneratedAqlQuery {
     // Instantiate a query, build the AQL, execute it, and return.
@@ -65,15 +65,15 @@ export class AqBuilder {
   }
 
   /**
-   * Returns a new {@link AqBuilder} containing a buildable {@link AqQuery}.
+   * Returns a new {@link AqBuilder} containing a buildable {@link AqStrict}.
    */
-  constructor(input: string | ArangoCollection | AqQuery) {
+  constructor(input: string | ArangoCollection | AqStrict | AqQuery ) {
     if (isArangoCollection(input)) {
       this.spec = { collection: input };
     } else if (typeof input === 'string') {
       this.spec = { collection: labelify(input) };
     } else {
-      this.spec = input;
+      this.spec = expandAqShorthand(input);
     }
   }
 

@@ -1,5 +1,5 @@
 import test from 'ava';
-import { AqQuery } from '../src/query.js';
+import { AqStrict } from '../src/query.js';
 import { buildQuery } from '../src/build-query.js';
 
 test('render from spec', t => {
@@ -10,7 +10,7 @@ test('render from spec', t => {
     RETURN { prop1, prop2, prop3 }
   `;
 
-  const spec: AqQuery = {
+  const spec: AqStrict = {
     collection: 'collection',
     aggregates: [
       { property: 'prop1', aggregate: 'collect' },
@@ -34,7 +34,7 @@ test('render with total', t => {
     RETURN { prop1, total }
   `;
 
-  const spec: AqQuery = {
+  const spec: AqStrict = {
     collection: 'collection',
     aggregates: [{ property: 'prop1', aggregate: 'collect' }]
   }
