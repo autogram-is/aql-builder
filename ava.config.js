@@ -8,7 +8,7 @@ export default {
     "ts": "module"
   },
   "concurrency": 1,
-  "failFast": true,
+  "failFast": false,
   "environmentVariables": {
     "NODE_NO_WARNINGS": "1"
   },

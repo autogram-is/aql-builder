@@ -83,32 +83,28 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
         ',\n',
       ),
     );
-  }
 
-  // If aggregation functions are being used, start an AGGREGATE section
-  if (Object.entries(aggregated).length > 0) {
-    querySegments.push(aql`AGGREGATE`);
-    querySegments.push(
-      join(
-        Object.entries(aggregated).map(
-          ([label, path]) => aql`  ${literal(label)} = ${literal(path)}`,
-        ),
-        ',\n',
-      ),
-    );
-  }
-
-  // If any COLLECT or AGGREGATE properties are used, and the 'count' property
-  // isn't set to false, wrap up the COLLECT section, ala WITH COUNT INTO…
-  if (
-    Object.entries(aggregated).length > 0 ||
-    Object.entries(collected).length > 0
-  ) {
-    if (strictSpec.count !== false) {
-      querySegments.push(
-        aql`WITH COUNT INTO ${literal(strictSpec.count ?? 'total')}`,
+    // If aggregation functions are being used, start an AGGREGATE section
+    // and convert any COUNT into an aggregate.
+    if (Object.entries(aggregated).length > 0) {
+      querySegments.push(aql`AGGREGATE`);
+      const qs = Object.entries(aggregated).map(
+        ([label, path]) => aql`  ${literal(label)} = ${literal(path)}`,
       );
-      document[strictSpec.count ?? 'total'] = strictSpec.count ?? 'total';
+      if (strictSpec.count !== false) {
+        qs.push(aql`  ${literal(strictSpec.count)} = COUNT(1)`);
+        document[strictSpec.count] = strictSpec.count;
+      }
+
+      querySegments.push(join(qs, ',\n'));
+    } else {
+      // If there are no aggregates but COUNT is active, create it.
+      if (strictSpec.count !== false) {
+        querySegments.push(
+          aql`WITH COUNT INTO ${literal(strictSpec.count ?? 'total')}`,
+        );
+        document[strictSpec.count ?? 'total'] = strictSpec.count ?? 'total';
+      }
     }
   }
 

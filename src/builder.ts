@@ -67,16 +67,13 @@ export class AqBuilder {
   /**
    * Returns a new {@link AqBuilder} containing a buildable {@link AqStrict}.
    */
-  constructor(
-    input: string | ArangoCollection | AqStrict | AqQuery,
-    document = 'item',
-  ) {
+  constructor(input: string | ArangoCollection | AqStrict | AqQuery) {
     if (isArangoCollection(input)) {
-      this.spec = { collection: input, document };
+      this.spec = expandAqShorthand({ collection: input });
     } else if (typeof input === 'string') {
-      this.spec = { collection: sanitizeName(input), document };
+      this.spec = expandAqShorthand({ collection: sanitizeName(input) });
     } else {
-      this.spec = expandAqShorthand(input, document);
+      this.spec = expandAqShorthand(input);
     }
   }
 
@@ -182,7 +179,7 @@ export class AqBuilder {
     return this;
   }
 
-  count(label: string | false | undefined): this {
+  count(label: string | false): this {
     this.spec.count = label;
     return this;
   }

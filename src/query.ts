@@ -71,17 +71,23 @@ export type AqPropertyNameAndPath = [name: string, path: string];
  */
 export type AqStrict = Omit<
   AqQuery,
-  'document' | 'filters' | 'aggregates' | 'sorts' | 'return'
+  'document' | 'count' | 'filters' | 'aggregates' | 'sorts' | 'return'
 > & {
   document: string;
+  count: string | false;
   filters?: AqFilter[];
   aggregates?: AqAggregate[];
   sorts?: AqSort[] | null;
   return?: AqProperty[];
 };
 
-export function expandAqShorthand(input: AqQuery, document = 'item') {
+export function expandAqShorthand(
+  input: AqQuery,
+  document = 'item',
+  count = 'total',
+) {
   input.document ??= document;
+  input.count ??= count;
 
   if (input.filters) {
     for (let i = 0; i < input.filters.length; i++) {
