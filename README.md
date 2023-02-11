@@ -36,7 +36,7 @@ const qs: AqQuery = {
   filters: [
     { name: 'url.protocol', eq: null, negate: true },
     { name: 'url.domain', in: ['example.com', 'test.com'] },
-    { name: 'status', in: [200, 404], collected: true },
+    { name: 'status', in: [200, 404], document: false },
   ],
   aggregates: [
     { name: 'status', aggregate: 'collect' },
@@ -66,7 +66,7 @@ const qs: AqQuery = {
   filters: [
     'url.protocol', // Expanded to 'equals null, negated' filter
     { name: 'url.domain', in: ['example.com', 'test.com'] },
-    { name: 'status', in: [200, 404], collected: true },
+    { name: 'status', in: [200, 404], documemt: false },
   ],
   aggregates: ['status', 'mime'], // Expanded to 'collect' aggregates
   count: 'total',
