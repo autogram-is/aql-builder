@@ -36,7 +36,7 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
   if (strictSpec.aggregates?.length) {
     const coerced: AqAggregate[] =
       strictSpec.return
-        ?.filter(p => p.label !== false)
+        ?.filter(p => p.document !== false)
         .map(p => {
           return { ...p, aggregate: 'collect' } as AqAggregate;
         }) ?? [];
@@ -47,32 +47,24 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
   // If there are still properties left, we add them to the final
   // returned result collection.
   for (const p of strictSpec.return ?? []) {
-    const path = renderPath(p);
-    if (p.label !== false) {
-      const label = p.label ? labelify(p.label) : labelify(p.property);
-      document[label] = path;
-    }
+    document[renderLabel(p)] = renderPath(p);
   }
 
   // Loop through the aggregates, splitting out 'collect' assignments
   // (equivalent to SQL's GROUP BY) from the aggregation functions.
   for (const p of strictSpec.aggregates ?? []) {
-    const path = renderPath(p);
-    if (p.label !== false) {
-      const label = p.label ? labelify(p.label) : labelify(p.property);
-      if (p.aggregate === 'collect') {
-        collected[label] = path;
-        document[label] = label;
-      } else {
-        aggregated[label] = wrapAggregate(p);
-        document[label] = label;
-      }
+    if (p.aggregate === 'collect') {
+      collected[renderLabel(p)] = renderPath(p);
+      document[renderLabel(p)] = renderLabel(p);
+    } else {
+      aggregated[renderLabel(p)] = renderAggregatePath(p);
+      document[renderLabel(p)] = renderLabel(p);
     }
   }
 
   // Add any filters that should apply *before* the collect statement.
   for (const p of strictSpec.filters ?? []) {
-    if (p.collected !== true) querySegments.push(...wrapFilter(p));
+    if (p.document !== false) querySegments.push(...wrapFilter(p));
   }
 
   // If there are any COLLECT assignments, or any AGGREGATE statements,
@@ -122,7 +114,7 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
 
   // Add any filters that should apply after the collection is done
   for (const p of strictSpec.filters ?? []) {
-    if (p.collected === true) querySegments.push(...wrapFilter(p));
+    if (p.document === false) querySegments.push(...wrapFilter(p));
   }
 
   // Add a LIMIT statement if a max number of records was strictSpecified.
@@ -135,7 +127,7 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
   } else {
     for (const p of strictSpec.sorts ?? []) {
       const path = renderPath({
-        collected: strictSpec.aggregates?.length ? true : false,
+        document: strictSpec.aggregates?.length ? false : strictSpec.document,
         ...p,
       });
       querySegments.push(
@@ -154,8 +146,8 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
  * Given an AqAggregate definition, generate the right side of an AQL
  * aggregate assignment.
  */
-function wrapAggregate(p: AqAggregate) {
-  const path = renderPath(p);
+export function renderAggregatePath(p: AqAggregate, document: string | false = 'item') {
+  const path = renderPath(p, document);
 
   if (
     ['min', 'max', 'sum', 'avg'].includes(p.aggregate) &&
@@ -168,30 +160,30 @@ function wrapAggregate(p: AqAggregate) {
 }
 
 function wrapFilter(p: AqFilter) {
-  const label = p.label ? labelify(p.label) : renderPath(p);
+  const path = renderPath(p);
 
   const conditions: GeneratedAqlQuery[] = [];
   if (p.eq !== undefined) {
     conditions.push(
-      aql`FILTER ${literal(label)} ${literal(p.negate ? '!=' : '==')} ${p.eq}`,
+      aql`FILTER ${literal(path)} ${literal(p.negate ? '!=' : '==')} ${p.eq}`,
     );
   }
 
   if (p.lt !== undefined) {
     conditions.push(
-      aql`FILTER ${literal(label)} ${literal(p.negate ? '>=' : '<')} ${p.lt}`,
+      aql`FILTER ${literal(path)} ${literal(p.negate ? '>=' : '<')} ${p.lt}`,
     );
   }
 
   if (p.gt !== undefined) {
     conditions.push(
-      aql`FILTER ${literal(label)} ${literal(p.negate ? '<=' : '>')} ${p.gt}`,
+      aql`FILTER ${literal(path)} ${literal(p.negate ? '<=' : '>')} ${p.gt}`,
     );
   }
 
   if (p.in !== undefined) {
     conditions.push(
-      aql`FILTER ${literal(label)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${
+      aql`FILTER ${literal(path)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${
         p.in
       }`,
     );
@@ -200,14 +192,14 @@ function wrapFilter(p: AqFilter) {
   if (p.contains !== undefined) {
     if (p.type === 'string' && typeof p.contains === 'string') {
       conditions.push(
-        aql`FILTER ${literal(label)} ${literal(
+        aql`FILTER ${literal(path)} ${literal(
           p.negate ? 'NOT LIKE' : 'LIKE',
         )} ${p.contains}'`,
       );
     }
     conditions.push(
       aql`FILTER ${p.contains} ${literal(p.negate ? 'NOT IN' : 'IN')} ${literal(
-        label,
+        path,
       )}`,
     );
   }
@@ -230,14 +222,15 @@ function renderReturn(document: Record<string, string>): GeneratedAqlQuery {
   return aql`RETURN {\n${l}\n}`;
 }
 
-function renderPath(p: AqProperty | AqFilter | AqAggregate | AqSort): string {
-  if ('collected' in p && p.collected === true) {
-    return p.property;
-  } else {
-    return p.document ?? 'item' + '.' + p.property;
-  }
+export function renderPath(p: AqProperty | AqFilter | AqAggregate | AqSort, document: string | false = 'item'): string {
+  const prefix = (p.document === false) ? '' : ((p.document ?? document) + '.');
+  return prefix + (p.path ?? p.name);
 }
 
-export function labelify(input: string, replacement = '_') {
+export function renderLabel(p: AqProperty | AqFilter | AqAggregate | AqSort): string {
+  return sanitizeName(p.name ?? p.path ?? 'ERROR');
+}
+
+export function sanitizeName(input: string, replacement = '_') {
   return input.replace(/[[\].-\s@]/g, replacement);
 }

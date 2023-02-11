@@ -15,16 +15,16 @@ test('fluent, spec, and strict spec match', t => {
   const spec = new AqBuilder({
     collection: 'responses',
     filters: [
-      { property: 'url.protocol', eq: null, negate: true },
-      { property: 'url.domain', in: ['example.com', 'test.com'] },
-      { property: 'status', in: [200, 404], collected: true },
+      { path: 'url.protocol', eq: null, negate: true },
+      { path: 'url.domain', in: ['example.com', 'test.com'] },
+      { path: 'status', in: [200, 404], document: false },
     ],
     aggregates: [
-      { property: 'status', aggregate: 'collect' },
-      { property: 'mime', aggregate: 'collect' },
+      { path: 'status', aggregate: 'collect' },
+      { path: 'mime', aggregate: 'collect' },
     ],
     sorts: [
-      { property: 'total', direction: 'desc' },
+      { path: 'total', direction: 'desc' },
     ],
     count: 'total'
   }).build();
@@ -33,8 +33,8 @@ test('fluent, spec, and strict spec match', t => {
     collection: 'responses',
     filters: [
       'url.protocol',
-      { property: 'url.domain', in: ['example.com', 'test.com'] },
-      { property: 'status', in: [200, 404], collected: true },
+      { path: 'url.domain', in: ['example.com', 'test.com'] },
+      { path: 'status', in: [200, 404], document: false },
     ],
     aggregates: ['status', 'mime'],
     sorts: ['total'],

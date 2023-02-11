@@ -8,7 +8,7 @@ import {
   AggregateFunction,
 } from './property.js';
 import { AqStrict, AqQuery, expandAqShorthand } from './query.js';
-import { labelify, buildQuery } from './build-query.js';
+import { sanitizeName, buildQuery } from './build-query.js';
 import { JsonPrimitive } from '@salesforce/ts-types';
 import { ArangoCollection, isArangoCollection } from 'arangojs/collection.js';
 
@@ -67,13 +67,13 @@ export class AqBuilder {
   /**
    * Returns a new {@link AqBuilder} containing a buildable {@link AqStrict}.
    */
-  constructor(input: string | ArangoCollection | AqStrict | AqQuery) {
+  constructor(input: string | ArangoCollection | AqStrict | AqQuery, document = 'item') {
     if (isArangoCollection(input)) {
-      this.spec = { collection: input };
+      this.spec = { collection: input, document };
     } else if (typeof input === 'string') {
-      this.spec = { collection: labelify(input) };
+      this.spec = { collection: sanitizeName(input), document };
     } else {
-      this.spec = expandAqShorthand(input);
+      this.spec = expandAqShorthand(input, document);
     }
   }
 
@@ -85,81 +85,67 @@ export class AqBuilder {
    * properties will be transformed into COLLECT assignments when
    * the final query is built.
    */
-  return(property: string | AqProperty, label?: string): this {
+  return(name: string | AqProperty, path?: string): this {
     this.spec.return ??= [];
-    if (typeof property === 'string') {
-      if (label) {
-        this.spec.return.push({
-          label: labelify(label),
-          property: property,
-        });
-      } else {
-        this.spec.return.push({ property: property });
-      }
+    if (typeof name === 'string') {
+      this.spec.return.push({ name, path });
     } else {
-      this.spec.return.push(property);
+      this.spec.return.push(name);
     }
     return this;
   }
 
-  groupBy(property: string | AqAggregate, label?: string): this {
-    return this.collect(property, label);
+  groupBy(name: string | AqAggregate, label?: string): this {
+    return this.collect(name, label);
   }
 
-  collect(property: string | AqAggregate, label?: string): this {
-    return this.aggregate(property, label, 'collect');
+  collect(name: string | AqAggregate, path?: string): this {
+    return this.aggregate(name, 'collect', path);
   }
 
   aggregate(
-    property: string | AqAggregate,
-    label?: string,
+    name: string | AqAggregate,
     aggregate: AggregateFunction = 'collect',
+    path?: string,
   ): this {
     this.spec.aggregates ??= [];
-    if (typeof property === 'string') {
-      this.spec.aggregates.push({
-        label: label ? labelify(label) : labelify(property),
-        property: property,
-        aggregate,
-      });
+    if (typeof name === 'string') {
+      this.spec.aggregates.push({ name, path, aggregate });
     } else {
-      this.spec.aggregates.push({ ...property, label, aggregate });
+      this.spec.aggregates.push({ ...name, path, aggregate });
     }
     return this;
   }
 
   filterBy(
     property: string | AqFilter,
-    value?: JsonPrimitive | JsonPrimitive[],
+    value?: JsonPrimitive | JsonPrimitive[]
   ): this {
     this.spec.filters ??= [];
     if (typeof property === 'string') {
       if (value === undefined) {
         this.spec.filters.push({
-          collected: this.spec.aggregates?.length ? true : false,
-          label: false,
-          property,
+          document: this.spec.aggregates?.length ? false : this.spec.document,
+          path: property,
           eq: null,
           negate: true,
         });
       } else if (Array.isArray(value)) {
         this.spec.filters.push({
-          property,
-          label: false,
+          document: this.spec.aggregates?.length ? false : this.spec.document,
+          path: property,
           in: value,
-          collected: this.spec.aggregates?.length ? true : false,
         });
       } else {
         this.spec.filters.push({
-          property,
-          label: false,
+          document: this.spec.aggregates?.length ? false : this.spec.document,
+          path: property,
           eq: value,
-          collected: this.spec.aggregates?.length ? true : false,
         });
       }
     } else {
-      const collected = this.spec.aggregates?.length ? true : false;
-      this.spec.filters.push({ ...property, collected });
+      const document = this.spec.aggregates?.length ? false : this.spec.document;
+      this.spec.filters.push({ ...property, document });
     }
     return this;
   }
@@ -173,7 +159,7 @@ export class AqBuilder {
       this.spec.sorts = null;
     } else if (typeof property === 'string') {
       this.spec.sorts.push({
-        property,
+        path: property,
         direction: direction,
       });
     } else {

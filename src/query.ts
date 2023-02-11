@@ -15,6 +15,15 @@ export type AqQuery = {
   collection: string | ArangoCollection;
 
   /**
+   * The AQL variable name used to refer to individual documents in the 
+   * collection. In most cases, this is prepended to the {@link AqProperty.path|path}
+   * of each invididual property when building the query.
+   * 
+   * @defaultValue `item`
+   */
+  document?: string;
+
+  /**
    * A list of {@link AqFilter} definitions, property names, or property
    * name/path pairs to filter by when querying the collection.
    */
@@ -53,36 +62,40 @@ export type AqQuery = {
 
 export type AqPropertyName = string;
 
-export type AqPropertyNameAndPath = [label: string, path: string];
+export type AqPropertyNameAndPath = [name: string, path: string];
 
 /**
- * A strict version of AqQuery that doesn't support shorthand property
- * syntax for filters, aggregates, sorts, or return values.
+ * A strict version of AqQuery that requires an explicit {@link AqQuery.document|document}
+ * value, and doesn't support shorthand property syntax for filters,
+ * aggregates, sorts, or return values.
  */
 export type AqStrict = Omit<
   AqQuery,
-  'filters' | 'aggregates' | 'sorts' | 'return'
+  'document' | 'filters' | 'aggregates' | 'sorts' | 'return'
 > & {
+  document: string;
   filters?: AqFilter[];
   aggregates?: AqAggregate[];
   sorts?: AqSort[] | null;
   return?: AqProperty[];
 };
 
-export function expandAqShorthand(input: AqQuery) {
+export function expandAqShorthand(input: AqQuery, document = 'item') {
+  input.document ??= document;
+
   if (input.filters) {
     for (let i = 0; i < input.filters.length; i++) {
       const val = input.filters[i];
       if (typeof val === 'string') {
         input.filters[i] = {
-          property: val,
+          path: val,
           eq: null,
           negate: true,
         } as AqFilter;
       } else if (Array.isArray(val)) {
         input.filters[i] = {
-          label: val[0],
-          property: val[1],
+          name: val[0],
+          path: val[1],
           eq: null,
           negate: true,
         } as AqFilter;
@@ -95,13 +108,13 @@ export function expandAqShorthand(input: AqQuery) {
       const val = input.aggregates[i];
       if (typeof val === 'string') {
         input.aggregates[i] = {
-          property: val,
+          path: val,
           aggregate: 'collect',
         } as AqAggregate;
       } else if (Array.isArray(val)) {
         input.aggregates[i] = {
-          label: val[0],
-          property: val[1],
+          name: val[0],
+          path: val[1],
           aggregate: 'collect',
         } as AqAggregate;
       }
@@ -112,7 +125,7 @@ export function expandAqShorthand(input: AqQuery) {
     for (let i = 0; i < input.sorts.length; i++) {
       const val = input.sorts[i];
       if (typeof val === 'string') {
-        input.sorts[i] = { property: val, direction: 'desc' } as AqSort;
+        input.sorts[i] = { path: val, direction: 'desc' } as AqSort;
       }
     }
   }
@@ -121,9 +134,9 @@ export function expandAqShorthand(input: AqQuery) {
     for (let i = 0; i < input.return.length; i++) {
       const val = input.return[i];
       if (typeof val === 'string') {
-        input.return[i] = { property: val } as AqProperty;
+        input.return[i] = { path: val } as AqProperty;
       } else if (Array.isArray(val)) {
-        input.return[i] = { label: val[0], property: val[1] } as AqProperty;
+        input.return[i] = { name: val[0], path: val[1] } as AqProperty;
       }
     }
   }

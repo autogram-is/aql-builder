@@ -34,17 +34,17 @@ import { AqQuery, buildQuery } from 'aql-builder';
 const qs: AqQuery = {
   collection: 'responses',
   filters: [
-    { property: 'url.protocol', eq: null, negate: true },
-    { property: 'url.domain', in: ['example.com', 'test.com'] },
-    { property: 'status', in: [200, 404], collected: true },
+    { name: 'url.protocol', eq: null, negate: true },
+    { name: 'url.domain', in: ['example.com', 'test.com'] },
+    { name: 'status', in: [200, 404], collected: true },
   ],
   aggregates: [
-    { property: 'status', aggregate: 'collect' },
-    { property: 'mime', aggregate: 'collect' },
+    { name: 'status', aggregate: 'collect' },
+    { name: 'mime', aggregate: 'collect' },
   ],
   count: 'total',
   sorts: [
-    { property: 'total', direction: 'desc' },
+    { name: 'total', direction: 'desc' },
   ],
 };
 const aqlQuery = buildQuery(qs);
@@ -54,7 +54,7 @@ const aqlQuery = buildQuery(qs);
 
 The `AqQuery` structure also supports shorthand versions of common filter, aggregate,
 sort, and return definitions in addition to the full structures from AqQuery.
-e.g., `return: [{ property: 'prop.name' }]` be written as `return: ['prop.name']`.
+e.g., `return: [{ name: 'prop.name' }]` be written as `return: ['prop.name']`.
 
 These shorthand versions can be mixed and matched as needed.
 
@@ -65,8 +65,8 @@ const qs: AqQuery = {
   collection: 'responses',
   filters: [
     'url.protocol', // Expanded to 'equals null, negated' filter
-    { property: 'url.domain', in: ['example.com', 'test.com'] },
-    { property: 'status', in: [200, 404], collected: true },
+    { name: 'url.domain', in: ['example.com', 'test.com'] },
+    { name: 'status', in: [200, 404], collected: true },
   ],
   aggregates: ['status', 'mime'], // Expanded to 'collect' aggregates
   count: 'total',

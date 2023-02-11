@@ -12,10 +12,11 @@ test('render from spec', t => {
 
   const spec: AqStrict = {
     collection: 'collection',
+    document: 'item',
     aggregates: [
-      { property: 'prop1', aggregate: 'collect' },
-      { property: 'prop2', aggregate: 'sum', type: 'number' },
-      { property: 'prop3', aggregate: 'sum', type: 'string' }
+      { path: 'prop1', aggregate: 'collect' },
+      { path: 'prop2', aggregate: 'sum', type: 'number' },
+      { path: 'prop3', aggregate: 'sum', type: 'string' }
     ],
     count: false
   }
@@ -23,7 +24,7 @@ test('render from spec', t => {
   const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
   const e = expected.trim().replace(/[\r\s]+/g, ' ');
 
-  t.assert(q == e);
+  t.assert(q === e);
 });
 
 test('render with total', t => {
@@ -36,11 +37,12 @@ test('render with total', t => {
 
   const spec: AqStrict = {
     collection: 'collection',
-    aggregates: [{ property: 'prop1', aggregate: 'collect' }]
+    document: 'item',
+    aggregates: [{ path: 'prop1', aggregate: 'collect' }]
   }
 
   const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
   const e = expected.trim().replace(/[\r\s]+/g, ' ');
 
-  t.assert(q == e);
+  t.assert(q === e);
 });
