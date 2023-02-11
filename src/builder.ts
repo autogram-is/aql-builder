@@ -67,7 +67,10 @@ export class AqBuilder {
   /**
    * Returns a new {@link AqBuilder} containing a buildable {@link AqStrict}.
    */
-  constructor(input: string | ArangoCollection | AqStrict | AqQuery, document = 'item') {
+  constructor(
+    input: string | ArangoCollection | AqStrict | AqQuery,
+    document = 'item',
+  ) {
     if (isArangoCollection(input)) {
       this.spec = { collection: input, document };
     } else if (typeof input === 'string') {
@@ -119,7 +122,7 @@ export class AqBuilder {
 
   filterBy(
     property: string | AqFilter,
-    value?: JsonPrimitive | JsonPrimitive[]
+    value?: JsonPrimitive | JsonPrimitive[],
   ): this {
     this.spec.filters ??= [];
     if (typeof property === 'string') {
@@ -144,7 +147,9 @@ export class AqBuilder {
         });
       }
     } else {
-      const document = this.spec.aggregates?.length ? false : this.spec.document;
+      const document = this.spec.aggregates?.length
+        ? false
+        : this.spec.document;
       this.spec.filters.push({ ...property, document });
     }
     return this;

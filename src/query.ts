@@ -15,10 +15,10 @@ export type AqQuery = {
   collection: string | ArangoCollection;
 
   /**
-   * The AQL variable name used to refer to individual documents in the 
+   * The AQL variable name used to refer to individual documents in the
    * collection. In most cases, this is prepended to the {@link AqProperty.path|path}
    * of each invididual property when building the query.
-   * 
+   *
    * @defaultValue `item`
    */
   document?: string;

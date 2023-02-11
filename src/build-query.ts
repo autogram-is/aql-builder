@@ -146,7 +146,10 @@ export function buildQuery(spec: AqQuery): GeneratedAqlQuery {
  * Given an AqAggregate definition, generate the right side of an AQL
  * aggregate assignment.
  */
-export function renderAggregatePath(p: AqAggregate, document: string | false = 'item') {
+export function renderAggregatePath(
+  p: AqAggregate,
+  document: string | false = 'item',
+) {
   const path = renderPath(p, document);
 
   if (
@@ -222,12 +225,17 @@ function renderReturn(document: Record<string, string>): GeneratedAqlQuery {
   return aql`RETURN {\n${l}\n}`;
 }
 
-export function renderPath(p: AqProperty | AqFilter | AqAggregate | AqSort, document: string | false = 'item'): string {
-  const prefix = (p.document === false) ? '' : ((p.document ?? document) + '.');
+export function renderPath(
+  p: AqProperty | AqFilter | AqAggregate | AqSort,
+  document: string | false = 'item',
+): string {
+  const prefix = p.document === false ? '' : (p.document ?? document) + '.';
   return prefix + (p.path ?? p.name);
 }
 
-export function renderLabel(p: AqProperty | AqFilter | AqAggregate | AqSort): string {
+export function renderLabel(
+  p: AqProperty | AqFilter | AqAggregate | AqSort,
+): string {
   return sanitizeName(p.name ?? p.path ?? 'ERROR');
 }
 

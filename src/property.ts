@@ -20,22 +20,22 @@ export const sortMap = {
 
 /**
  * Describes a property used in an Arango query.
- * 
+ *
  * An {@link AqProperty}'s most important attributes are {@link AqProperty.name|name} and
  * {@link AqProperty.path|path}; they interact in important ways.
- * 
+ *
  * - When {@link AqProperty.name|name} is specified but {@link AqProperty.path|path} is not,
  *   `path` is set to `name` and `name` is sanitized: periods, brackets, and whitespace are
  *   replaced with underscores.
  * - When both {@link AqProperty.name|name} and {@link AqProperty.path|path} are set, `name`
  *   is sanitized and used as the friendly label for the value pointed to by `path`.
- * 
+ *
  * @example A simple property reference
  * ```
  * const p: AqProperty = { name: 'title' }
  * // AQL output: RETURN { title: item.title }
  * ```
- * 
+ *
  * @example A nested property with custom label
  * ```
  * const p: AqProperty = {
@@ -44,13 +44,13 @@ export const sortMap = {
  * }
  * // AQL output: RETURN { headline: item.metadata.headline }
  * ```
- * 
+ *
  * @example Sanitized label
  * ```
  * const p: AqProperty = { name: 'metadata.headline' }
  * // AQL output: RETURN { metadata_headline: item.metadata.headline }
  * ```
- * 
+ *
  * @example An item from a nested array, with a custom label
  * ```
  * const p: AqProperty = {
@@ -59,7 +59,7 @@ export const sortMap = {
  * }
  * // AQL output: RETURN { firstborn: item.children[0].name }
  * ```
- * 
+ *
  * @example An item from a nested array, with a custom label, and no document identifier.
  * ```
  * const p: AqProperty = {
