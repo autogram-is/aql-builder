@@ -41,6 +41,6 @@ test('fluent, spec, and strict spec match', t => {
     count: 'total'
   }).build();
 
-  t.assert(fluent.query === spec.query);
-  t.assert(spec.query === strictSpec.query);
+  t.deepEqual(fluent.query, spec.query);
+  t.deepEqual(spec.query, strictSpec.query);
 });

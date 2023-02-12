@@ -24,7 +24,7 @@ test('render from spec', t => {
   const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
   const e = expected.trim().replace(/[\r\s]+/g, ' ');
 
-  t.assert(q === e);
+  t.is(q, e);
 });
 
 test('aggregate and custom total', t => {
@@ -52,7 +52,7 @@ test('aggregate and custom total', t => {
   const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
   const e = expected.trim().replace(/[\r\s]+/g, ' ');
 
-  t.assert(q === e);
+  t.is(q, e);
 });
 
 
@@ -74,5 +74,5 @@ test('render with total', t => {
   const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');
   const e = expected.trim().replace(/[\r\s]+/g, ' ');
 
-  t.assert(q === e);
+  t.is(q, e);
 });
