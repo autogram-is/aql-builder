@@ -110,9 +110,9 @@ export class AqBuilder {
   ): this {
     this.spec.aggregates ??= [];
     if (typeof name === 'string') {
-      this.spec.aggregates.push({ name, path, aggregate });
+      this.spec.aggregates.push({ path, name, aggregate });
     } else {
-      this.spec.aggregates.push({ ...name, path, aggregate });
+      this.spec.aggregates.push({ ...name, ...(path ? { path } : {}), aggregate });
     }
     return this;
   }

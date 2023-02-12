@@ -2,6 +2,12 @@ import { JsonPrimitive } from '@salesforce/ts-types';
 export type AggregateFunction = keyof typeof aggregateMap;
 export type SortDirection = keyof typeof sortMap;
 
+type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
+    Pick<T, Exclude<keyof T, Keys>> 
+    & {
+        [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>
+    }[Keys]
+
 export const aggregateMap = {
   collect: (value: string) => value,
   distinct: (value: string) => `COUNT_DISTINCT(${value})`,
@@ -70,7 +76,7 @@ export const sortMap = {
  * // AQL output: RETURN { firstborn: children[0].name }
  * ```
  */
-export type AqProperty = {
+export type AqProperty = RequireAtLeastOne<{
   /**
    * A specific property to be returned in the query results. For nested properties, this
    * can be the dot-notation path to a document attribute.
@@ -101,7 +107,7 @@ export type AqProperty = {
    * on string properties.
    */
   type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
-};
+}, 'name' | 'path'>;
 
 export type AqAggregate = AqProperty & {
   /**
