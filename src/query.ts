@@ -49,9 +49,10 @@ export type AqQuery = {
   sorts?: (AqPropertyName | AqSort)[] | null;
 
   /**
-   * The maximum number of records to return.
+   * The maximum number of records to return; when `false`, all matching data
+   * will be returned.
    */
-  limit?: number;
+  limit?: number | false;
 
   /**
    * A list of {@link AqProperty} definitions, property names, or property
