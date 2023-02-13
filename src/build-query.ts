@@ -8,16 +8,25 @@ import {
   AqFilter,
   AqSort,
 } from './property.js';
-import { AqQuery, AqSubquery, AqlExpansionOptions, expandAqShorthand } from './query.js';
+import {
+  AqQuery,
+  AqSubquery,
+  AqlExpansionOptions,
+  expandAqShorthand,
+} from './query.js';
 import { isArangoCollection } from 'arangojs/collection.js';
 
 /**
  * Given an AqQuery object, build an executable GeneratedAqlQuery.
- * 
+ *
  * @param spec An AqQuery structure the query to be build
  * @param options.inline If `true`, query won't include a RETURN clause.
  */
-export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, depth = 0): GeneratedAqlQuery {
+export function buildQuery(
+  spec: AqQuery,
+  options: AqlExpansionOptions = {},
+  depth = 0,
+): GeneratedAqlQuery {
   const strictSpec = expandAqShorthand(spec, options);
   // We use key/value pairs to accumulate properties and assignments that
   // must be unique in the final query.
@@ -37,7 +46,7 @@ export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, dep
   } else {
     querySegments.push(
       aql`${d}FOR ${literal(strictSpec.document)} IN ${literal(
-        strictSpec.collection
+        strictSpec.collection,
       )}`,
     );
   }
@@ -80,7 +89,9 @@ export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, dep
   // Add any filters that should apply *before* the collect statement.
   for (const p of strictSpec.filters ?? []) {
     if (p.document !== false)
-      querySegments.push(...wrapFilter(p, strictSpec.document).map(q => aql`${d}FILTER ${q}`));
+      querySegments.push(
+        ...wrapFilter(p, strictSpec.document).map(q => aql`${d}FILTER ${q}`),
+      );
   }
 
   // Add any inline subqueries
@@ -89,25 +100,25 @@ export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, dep
     if ('query' in q) {
       if (!q.name) {
         q.query.inline = true;
-        querySegments.push(renderSubQuery(q, depth+1));
+        querySegments.push(renderSubQuery(q, depth + 1));
       }
     } else {
       q.inline = true;
-      querySegments.push(renderSubQuery(q, depth+1));
+      querySegments.push(renderSubQuery(q, depth + 1));
     }
   }
-  
+
   // Add assignment subqueries
   for (const q of strictSpec.subqueries ?? []) {
     if ('query' in q) {
       const label = renderLabel({ name: q.name ?? q.query.document ?? 'ERR' });
       querySegments.push(aql`${d}LET ${literal(label)} = (`);
-      querySegments.push(renderSubQuery(q, depth+1));
+      querySegments.push(renderSubQuery(q, depth + 1));
       querySegments.push(aql`${d})`);
-    } else if (!q.inline){
+    } else if (!q.inline) {
       const label = renderLabel({ name: q.document ?? 'ERR' });
       querySegments.push(aql`${d}LET ${literal(label)} = (`);
-      querySegments.push(renderSubQuery(q, depth+1));
+      querySegments.push(renderSubQuery(q, depth + 1));
       querySegments.push(aql`${d})`);
     }
   }
@@ -123,7 +134,8 @@ export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, dep
     querySegments.push(
       join(
         Object.entries(collected).map(
-          ([label, path]) => aql`${aqIndent(depth+1)}${literal(label)} = ${literal(path)}`,
+          ([label, path]) =>
+            aql`${aqIndent(depth + 1)}${literal(label)} = ${literal(path)}`,
         ),
         ',\n',
       ),
@@ -137,7 +149,9 @@ export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, dep
         ([label, path]) => aql`  ${literal(label)} = ${literal(path)}`,
       );
       if (strictSpec.count !== false) {
-        qs.push(aql`${aqIndent(depth+1)}${literal(strictSpec.count)} = COUNT(1)`);
+        qs.push(
+          aql`${aqIndent(depth + 1)}${literal(strictSpec.count)} = COUNT(1)`,
+        );
         document[strictSpec.count] = strictSpec.count;
       }
 
@@ -156,7 +170,9 @@ export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, dep
   // Add any filters that should apply after the collection is done
   for (const p of strictSpec.filters ?? []) {
     if (p.document === false)
-    querySegments.push(...wrapFilter(p, strictSpec.document).map(q => aql`${d}FILTER ${q}`));
+      querySegments.push(
+        ...wrapFilter(p, strictSpec.document).map(q => aql`${d}FILTER ${q}`),
+      );
   }
 
   // Add a LIMIT statement if a max number of records was strictSpecified.
@@ -189,13 +205,10 @@ export function buildQuery(spec: AqQuery, options: AqlExpansionOptions = {}, dep
 /**
  * Renders one query for use as a subquery inside another.
  */
-export function renderSubQuery(
-  subquery: AqQuery | AqSubquery,
-  depth = 0
-) {
+export function renderSubQuery(subquery: AqQuery | AqSubquery, depth = 0) {
   if ('query' in subquery) {
     const opt: AqlExpansionOptions = {
-      ...(subquery.document ? { document: subquery.document } : {})
+      ...(subquery.document ? { document: subquery.document } : {}),
     };
     return buildQuery(subquery.query, opt, depth);
   } else {
@@ -226,47 +239,55 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   const conditions: GeneratedAqlQuery[] = [];
   if (p.eq !== undefined) {
     conditions.push(
-      aql`${literal(path)} ${literal(p.negate ? '!=' : '==')} ${ p.value === 'literal' ? p.eq : literal(p.eq)}`,
+      aql`${literal(path)} ${literal(p.negate ? '!=' : '==')} ${
+        p.value === 'literal' ? p.eq : literal(p.eq)
+      }`,
     );
   }
 
   if (p.lt !== undefined) {
     conditions.push(
-      aql`${literal(path)} ${literal(p.negate ? '>=' : '<')} ${ p.value === 'literal' ? p.lt : literal(p.lt)}`,
+      aql`${literal(path)} ${literal(p.negate ? '>=' : '<')} ${
+        p.value === 'literal' ? p.lt : literal(p.lt)
+      }`,
     );
   }
 
   if (p.gt !== undefined) {
     conditions.push(
-      aql`${literal(path)} ${literal(p.negate ? '<=' : '>')} ${ p.value === 'literal' ? p.gt : literal(p.gt)}`,
+      aql`${literal(path)} ${literal(p.negate ? '<=' : '>')} ${
+        p.value === 'literal' ? p.gt : literal(p.gt)
+      }`,
     );
   }
 
   if (p.in !== undefined) {
     if (p.value === 'dynamic' && typeof p.in === 'string') {
       conditions.push(
-        aql`${literal(path)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${literal(p.in)}`,
-      );  
+        aql`${literal(path)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${literal(
+          p.in,
+        )}`,
+      );
     } else {
       conditions.push(
-        aql`${literal(path)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${
-          p.in
-        }`,
-      );  
+        aql`${literal(path)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${p.in}`,
+      );
     }
   }
 
   if (p.contains !== undefined) {
     if (p.value === 'dynamic') {
-      conditions.push(aql`${literal(p.contains)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${literal(
-        path,
-      )}`);
+      conditions.push(
+        aql`${literal(p.contains)} ${literal(
+          p.negate ? 'NOT IN' : 'IN',
+        )} ${literal(path)}`,
+      );
     } else {
       if (p.type === 'string' && typeof p.contains === 'string') {
         conditions.push(
-          aql`${literal(path)} ${literal(
-            p.negate ? 'NOT LIKE' : 'LIKE',
-          )} ${p.contains}'`,
+          aql`${literal(path)} ${literal(p.negate ? 'NOT LIKE' : 'LIKE')} ${
+            p.contains
+          }'`,
         );
       } else {
         conditions.push(
@@ -281,15 +302,22 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   return conditions;
 }
 
-function renderReturn(properties: Record<string, string>, depth = 0, document = ''): GeneratedAqlQuery {
+function renderReturn(
+  properties: Record<string, string>,
+  depth = 0,
+  document = '',
+): GeneratedAqlQuery {
   const entries = Object.entries(properties);
-  if (entries.length === 0) return aql`${aqIndent(depth)}RETURN ${literal(document)}`;
-  if (entries.length === 1) return aql`${aqIndent(depth)}RETURN ${literal(entries[0][1])}`;
+  if (entries.length === 0)
+    return aql`${aqIndent(depth)}RETURN ${literal(document)}`;
+  if (entries.length === 1)
+    return aql`${aqIndent(depth)}RETURN ${literal(entries[0][1])}`;
   const l = literal(
     entries
       .map(entry => {
-        if (entry[0] === entry[1]) return `${'  '.repeat(depth+1)}${entry[0]}`;
-        else return `${'  '.repeat(depth+1)}${entry[0]}: ${entry[1]}`;
+        if (entry[0] === entry[1])
+          return `${'  '.repeat(depth + 1)}${entry[0]}`;
+        else return `${'  '.repeat(depth + 1)}${entry[0]}: ${entry[1]}`;
       })
       .join(',\n'),
   );
