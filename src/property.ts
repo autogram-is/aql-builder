@@ -110,6 +110,20 @@ export type AqProperty = RequireAtLeastOne<
      * on string properties.
      */
     type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
+
+    /**
+     * A function to wrap the property in once it's retrieved; this can be useful
+     * for returning the COUNT of a particular attribute rather than the attribute
+     * itself.
+     *
+     * Note that there's no attempt made to ensure this is a valid AQL function;
+     * let the caller beware.
+     *
+     * @example `const prop: AqProperty = { name: 'property', function: 'COUNT' }`
+     *
+     * @experimental
+     */
+    function?: string;
   },
   'name' | 'path'
 >;

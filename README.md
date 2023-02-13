@@ -140,5 +140,5 @@ As noted above, the `AqBuilder` class doesn't support the full range of features
 - Insert or Update queries. AQL Builder is read-only.
 - Use of constructed documents as query sources. Every query requires an existing collection to iterate over.
 - Explicit construction of return documents with nested properties. (Though you can return properties that are themselves arrays or objects.)
-- AQL functions in general. The aggregate functions like SUM() and MAX() are handled as one-offs by the aggregate code. At least using the current approach, adding arbitrary function support would result in JSON structures more complicated than the AQL itself.
+- Complex AQL functions. While it's possible to sneak certain functions in using 'FUNCTION(foo)" as property path, that trick chokes on any functions that require more than one parameter.
 - Explicitly ordering filter/subquery/aggregation functions to optimize queries or control returned results. The closest we get is the distinction between `filters` and `returnFilters` that run after aggregation.

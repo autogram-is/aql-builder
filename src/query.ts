@@ -34,6 +34,8 @@ export type AqQuery = {
   /**
    * A list of {@link AqSubquery} or {@link AqQuery} definitions to be run inside
    * the main query.
+   *
+   * @experimental
    */
   subqueries?: (AqSubquery | AqQuery)[];
 

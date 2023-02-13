@@ -329,7 +329,12 @@ export function renderPath(
   document?: string | false,
 ): string {
   const prefix = p.document === false ? '' : p.document ?? document ?? '';
-  return (prefix ? prefix + '.' : '') + (p.path ?? p.name);
+  const path = (prefix ? prefix + '.' : '') + (p.path ?? p.name);
+  if (p.function) {
+    return `${p.function.toLocaleUpperCase()}(${path})`;
+  } else {
+    return path;
+  }
 }
 
 export function renderLabel(
