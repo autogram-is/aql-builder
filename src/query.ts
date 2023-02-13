@@ -23,11 +23,13 @@ export type AqQuery = {
    */
   document?: string;
 
-  isSubquery?: true;
-
+  /**
+   * A boolean indicating that this query should be rendered without an
+   * explicit RETURN statement.
+   *
+   * @type {?true}
+   */
   inline?: true;
-
-  parentDocument?: string
 
   /**
    * A list of {@link AqSubquery} or {@link AqQuery} definitions to be run inside

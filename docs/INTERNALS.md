@@ -43,6 +43,7 @@ The `AqFilter` type also extends `AqProperty`, and adds a number of properties t
 
 ```typescript
 type AqQuery = {
+  inline: boolean,
   collection: string,
   document: string,
   subqueries: (AqQuery | AqSubquery)[]
@@ -58,10 +59,11 @@ type AqQuery = {
 
 - `collection`: the name of an Arango collection, or a full `ArangoCollection` object.
 - `document`: the variable name that should be used to refer to a single document in the collection; it defaults to 'item'.
-- `return`: property names, or full `AqProperty` objects, that should be returned in the result set.
+- `subqueries`: An array of `AqQuery` structures to be rendered as nested subqueries. Still experimental.
 - `filters`: property names, or full `AqFilter` objects, that should be used to construct filters.
 - `aggregates`: property names, or full `AqAggregate` objects, that should be collected or aggregated.
 - `count`: When collecting or aggregating, this controls the name of the 'WITH COUNT INTO...' variable.
 - `returnFilter`: Filters that should apply *after* the collect/aggregate phase of the query.
 - `sorts`: Property names, or full `AqSort` objects, to sort the final results by.
 - `limit`: The max number or results to return (`false` or `-1` will return all results).
+- `return`: property names, or full `AqProperty` objects, that should be returned in the result set.

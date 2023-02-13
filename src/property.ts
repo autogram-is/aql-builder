@@ -172,7 +172,7 @@ export type AqFilter = AqProperty & {
   /**
    * Indicates whether the comparison value is a literal or a reference to another variable in the query.
    */
-  value?: 'literal' | 'variable';
+  value?: 'literal' | 'dynamic';
 
   /**
    * Negates the effect of any filter conditions; for example, an `eq` condition

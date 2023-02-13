@@ -33,7 +33,8 @@ const aqlQuery = new AqBuilder('responses')
 
 console.log(aqlQuery);
 
-// GeneratedAqlQuery: {
+//  GeneratedAqlQuery
+//
 //  query: 'FOR item IN responses\n' +
 //    'FILTER item.url.protocol != @value0\n' +
 //    'FILTER item.url.domain IN @value1\n' +
@@ -52,7 +53,7 @@ console.log(aqlQuery);
 //}
 ```
 
-### Building a raw AqQuery
+### Manually constructed AqQuery
 
 Queries can also be described in JSON and passed straight to the builder function; the structure below generates a query identical to the chained method approach above.
 
@@ -78,11 +79,9 @@ const aq: AqQuery = {
 const aqlQuery = buildQuery(aq);
 ```
 
-### Using shorthand syntax with AqQuery
+### Shorthand syntax with AqQuery
 
-Finally, the `AqQuery` structure also supports shorthand versions of common filter, aggregate, sort, and return definitions in addition to the full structures from AqQuery. e.g., `return: [{ name: 'prop.name' }]` be written as `return: ['prop.name']`.
-
-These shorthand versions can be mixed and matched as needed.
+Finally, the `AqQuery` structure supports shorthand versions of common filter, aggregate, sort, and return definitions. For example, `return: [{ name: 'prop.name' }]` can be written as `return: ['prop.name']`. These shorthand versions can be mixed and matched as needed.
 
 ```typescript
 import { AqQuery, buildQuery } from 'aql-builder';
@@ -124,8 +123,22 @@ const query = new AqBuilder(aq)
   .build();
 ```
 
+### Advanced features
+
+Although the fluent methods on the `AqBuilder` class are handy, some types of query structures are only supported with manually-created `AqQuery` objects:
+
+- Filters that compare two properties, rather than one property to a literal value.
+- Subqueries, and filters/aggregations/property assignments that explicitly reference them.
+- Assignment of subqueries to custom variables that can be included in the results or used in filters
+
+Examples can be found in the `docs` directory.
+
 ## Limitations
 
-- For the time being, AQL Builder only supports simple queries that operate on a single collection without any joins or subqueries.
-- It doesn't support explicit construction of return documents with nested properties, though it does allow you to select properties that are arrays or objects.
-- AQL functions can't be used when adding individual properties; the aggregate functions like SUM() and MAX() are handled as one-offs by the aggregate code; if you need something more complex, writing your own AQL isnt much more complicated than tweaking the complex JSON that would be necessary to define it.
+As noted above, the `AqBuilder` class doesn't support the full range of features that are possible with `AqQuery`, and `AqQuery` only supports a subset of the full AQL spec. In particular:
+
+- Insert or Update queries. AQL Builder is read-only.
+- Use of constructed documents as query sources. Every query requires an existing collection to iterate over.
+- Explicit construction of return documents with nested properties. (Though you can return properties that are themselves arrays or objects.)
+- AQL functions in general. The aggregate functions like SUM() and MAX() are handled as one-offs by the aggregate code. At least using the current approach, adding arbitrary function support would result in JSON structures more complicated than the AQL itself.
+- Explicitly ordering filter/subquery/aggregation functions to optimize queries or control returned results. The closest we get is the distinction between `filters` and `returnFilters` that run after aggregation.

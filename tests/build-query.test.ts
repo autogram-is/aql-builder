@@ -1,26 +1,5 @@
 import test from 'ava';
 import { AqBuilder } from '../src/builder.js';
-import { indentQuery } from '../src/build-query.js';
-import { aql } from 'arangojs';
-
-test('Generated AQL manipulation', t => {
-  const aqlQuery = aql`FOR item IN collection
-  LET name = item.property
-RETURN {
-  name,
-  name2: item.property2
-}`;
-
-  const indented = `  FOR item IN collection
-    LET name = item.property
-  RETURN {
-    name,
-    name2: item.property2
-  }`;
-
-  indentQuery(aqlQuery);
-  t.is(aqlQuery.query, indented);
-});
 
 test('query renders', t => {
   const rendered = `

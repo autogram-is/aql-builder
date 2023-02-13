@@ -1,23 +1,29 @@
 import test from 'ava';
-import { AqQuery, expandAqShorthand } from '../src/query.js';
+import { AqQuery } from '../src/query.js';
 import { buildQuery } from '../src/build-query.js';
 
-test('simple subquery', t => {
+test('nested subqueries', t => {
   const pq: AqQuery = {
     collection: 'unique_urls',
     document: 'uu',
-    filters: [ { name: 'parsed.protocol', in: ['http:', 'https:'] } ],
     subqueries: [
       {
         collection: 'responds_with',
         document: 'rw',
-        filters: [{ path: '_from', eq: 'uu._id', value: 'variable' }]
+        filters: [{ path: '_from', eq: 'uu._id', value: 'dynamic' }],
+        subqueries: [
+          {
+            collection: 'resources',
+            document: 'rs',
+            filters: [{ path: '_id', eq: 'rw._to', value: 'dynamic' }]
+          },
+        ]
       },
     ],
     return: [
-      { name: 'id', path: '_id' },
-      { name: 'url', path: 'url' },
-      { name: 'resource', document: 'rw', path: '_to' }
+      { name: 'requested', path: 'parsed.href' },
+      { name: 'redirects', document: 'rw', path: 'redirects' },
+      { name: 'delivered', document: 'rs', path: 'url' }
     ]
   }
 
@@ -25,14 +31,50 @@ test('simple subquery', t => {
 `FOR uu IN unique_urls
   FOR rw IN responds_with
   FILTER rw._from == uu._id
-FILTER uu.parsed.protocol IN @value0
+    FOR rs IN resources
+    FILTER rs._id == rw._to
 RETURN {
-  id: uu._id,
-  url: uu.url,
-  resource: rw._to
+  requested: uu.parsed.href,
+  redirects: rw.redirects,
+  delivered: rs.url
 }`
 
-  console.log(expandAqShorthand(pq));
+  t.is(buildQuery(pq).query, renderedQuery);
+});
+
+test('assigned subquery', t => {
+  const pq: AqQuery = {
+    collection: 'unique_urls',
+    document: 'uu',
+    filters: [ { name: 'parsed.protocol', in: ['http:', 'https:'] } ],
+    subqueries: [
+      {
+        name: 'request',
+        query: {
+          collection: 'responds_with',
+          document: 'rw',
+          filters: [{ path: '_from', eq: 'uu._id', value: 'dynamic' }]
+        }
+      },
+    ],
+    return: [
+      { name: 'url', path: 'url' },
+      { name: 'redirects', document: 'request', path: 'redirects' }
+    ]
+  }
+
+  const renderedQuery =
+  `FOR uu IN unique_urls
+FILTER uu.parsed.protocol IN @value0
+LET request = (
+  FOR rw IN responds_with
+  FILTER rw._from == uu._id
+  RETURN rw
+)
+RETURN {
+  url: uu.url,
+  redirects: request.redirects
+}`
 
   t.is(buildQuery(pq).query, renderedQuery);
 });
