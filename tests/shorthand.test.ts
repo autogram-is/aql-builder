@@ -1,7 +1,7 @@
 import test from 'ava';
 import { AqBuilder } from '../src/builder.js';
 
-test('fluent, spec, and strict spec match', t => {
+test('fluent, spec, and strict spec render identically', t => {
   const fluent = new AqBuilder('responses')
     .filterBy('url.protocol')
     .filterBy('url.domain', ['example.com', 'test.com'])

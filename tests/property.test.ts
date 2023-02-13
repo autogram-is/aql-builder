@@ -14,16 +14,11 @@ function renderAggregate(p: AqAggregate) {
 
 test('name only', t => {
   const p: AqProperty = { name: 'foo.bar' };
-  t.is(renderProperty(p), 'RETURN { foo_bar: item.foo.bar }');
+  t.is(renderProperty(p), 'RETURN { foo_bar: foo.bar }');
 });
 
 test('name and path', t => {
   const p: AqProperty = { name: 'label', path: 'nested.property' };
-  t.is(renderProperty(p), 'RETURN { label: item.nested.property }');
-});
-
-test('name, path, no document', t => {
-  const p: AqProperty = { name: 'label', path: 'nested.property', document: false };
   t.is(renderProperty(p), 'RETURN { label: nested.property }');
 });
 

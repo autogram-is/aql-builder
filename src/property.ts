@@ -2,11 +2,13 @@ import { JsonPrimitive } from '@salesforce/ts-types';
 export type AggregateFunction = keyof typeof aggregateMap;
 export type SortDirection = keyof typeof sortMap;
 
-type RequireAtLeastOne<T, Keys extends keyof T = keyof T> =
-    Pick<T, Exclude<keyof T, Keys>> 
-    & {
-        [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>
-    }[Keys]
+type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
+  {
+    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
+  }[Keys];
 
 export const aggregateMap = {
   collect: (value: string) => value,
@@ -76,38 +78,41 @@ export const sortMap = {
  * // AQL output: RETURN { firstborn: children[0].name }
  * ```
  */
-export type AqProperty = RequireAtLeastOne<{
-  /**
-   * A specific property to be returned in the query results. For nested properties, this
-   * can be the dot-notation path to a document attribute.
-   *
-   * Alternately, a friendly label can be given here and the dot-notation path can be set
-   * in the {@link AqProperty.path} property.
-   */
-  name?: string;
+export type AqProperty = RequireAtLeastOne<
+  {
+    /**
+     * A specific property to be returned in the query results. For nested properties, this
+     * can be the dot-notation path to a document attribute.
+     *
+     * Alternately, a friendly label can be given here and the dot-notation path can be set
+     * in the {@link AqProperty.path} property.
+     */
+    name?: string;
 
-  /**
-   * The document variable this property belongs to. Only necessary when constructing
-   * complex, multi-collection queries. If this value is `false`, no document name will
-   * be used when constucting the property's path.
-   *
-   * @defaultValue `item`
-   */
-  document?: string | false;
+    /**
+     * The document variable this property belongs to. Only necessary when constructing
+     * complex, multi-collection queries. If this value is `false`, no document name will
+     * be used when constucting the property's path.
+     *
+     * @defaultValue `item`
+     */
+    document?: string | false;
 
-  /**
-   * The dot-notation path of a JSON document property; individual entries
-   * in arrays can also be referenced using array notation.
-   */
-  path?: string;
+    /**
+     * The dot-notation path of a JSON document property; individual entries
+     * in arrays can also be referenced using array notation.
+     */
+    path?: string;
 
-  /**
-   * The data type of the property in question. Generally, this is only necessary
-   * when generating aggregate queries that use numeric functions like SUM or AVG
-   * on string properties.
-   */
-  type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
-}, 'name' | 'path'>;
+    /**
+     * The data type of the property in question. Generally, this is only necessary
+     * when generating aggregate queries that use numeric functions like SUM or AVG
+     * on string properties.
+     */
+    type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  },
+  'name' | 'path'
+>;
 
 export type AqAggregate = AqProperty & {
   /**
@@ -157,12 +162,17 @@ export type AqFilter = AqProperty & {
   /**
    * Filters the query result to documents where the property is **one of the specified values**.
    */
-  in?: JsonPrimitive[];
+  in?: JsonPrimitive[] | string;
 
   /**
    * Filters the query result to documents where the property is an array that **contains the specified value**.
    */
   contains?: JsonPrimitive;
+
+  /**
+   * Indicates whether the comparison value is a literal or a reference to another variable in the query.
+   */
+  value?: 'literal' | 'variable';
 
   /**
    * Negates the effect of any filter conditions; for example, an `eq` condition
