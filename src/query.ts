@@ -24,6 +24,20 @@ export type AqQuery = {
   document?: string;
 
   /**
+   * A boolean indicating that this query should be rendered without an
+   * explicit RETURN statement.
+   *
+   * @type {?true}
+   */
+  inline?: true;
+
+  /**
+   * A list of {@link AqSubquery} or {@link AqQuery} definitions to be run inside
+   * the main query.
+   */
+  subqueries?: (AqSubquery | AqQuery)[];
+
+  /**
    * A list of {@link AqFilter} definitions, property names, or property
    * name/path pairs to filter by when querying the collection.
    */
@@ -61,6 +75,17 @@ export type AqQuery = {
   return?: (AqPropertyName | AqPropertyNameAndPath | AqProperty)[];
 };
 
+/**
+ * A self-contained query to be run inside another query; if a subquery's
+ * `name` property is set, it will be rendered as a `LET` assignment in
+ * the final AQL.
+ *
+ * @typedef {AqSubquery}
+ */
+export type AqSubquery = Partial<Omit<AqProperty, 'path'>> & {
+  query: AqQuery;
+};
+
 export type AqPropertyName = string;
 
 export type AqPropertyNameAndPath = [name: string, path: string];
@@ -82,13 +107,19 @@ export type AqStrict = Omit<
   return?: AqProperty[];
 };
 
+export interface AqlExpansionOptions {
+  document?: string;
+  parentDocument?: string;
+  count?: string;
+  inline?: true;
+}
 export function expandAqShorthand(
   input: AqQuery,
-  document = 'item',
-  count = 'total',
+  options: AqlExpansionOptions = {},
 ) {
-  input.document ??= document;
-  input.count ??= count;
+  input = { ...options, ...input };
+  input.document ??= 'item';
+  input.count ??= 'total';
 
   if (input.filters) {
     for (let i = 0; i < input.filters.length; i++) {

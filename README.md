@@ -33,7 +33,8 @@ const aqlQuery = new AqBuilder('responses')
 
 console.log(aqlQuery);
 
-// GeneratedAqlQuery: {
+//  GeneratedAqlQuery
+//
 //  query: 'FOR item IN responses\n' +
 //    'FILTER item.url.protocol != @value0\n' +
 //    'FILTER item.url.domain IN @value1\n' +
@@ -52,7 +53,7 @@ console.log(aqlQuery);
 //}
 ```
 
-### Building a raw AqQuery
+### Manually constructed AqQuery
 
 Queries can also be described in JSON and passed straight to the builder function; the structure below generates a query identical to the chained method approach above.
 
@@ -78,11 +79,9 @@ const aq: AqQuery = {
 const aqlQuery = buildQuery(aq);
 ```
 
-### Using shorthand syntax with AqQuery
+### Shorthand syntax with AqQuery
 
-Finally, the `AqQuery` structure also supports shorthand versions of common filter, aggregate, sort, and return definitions in addition to the full structures from AqQuery. e.g., `return: [{ name: 'prop.name' }]` be written as `return: ['prop.name']`.
-
-These shorthand versions can be mixed and matched as needed.
+Finally, the `AqQuery` structure supports shorthand versions of common filter, aggregate, sort, and return definitions. For example, `return: [{ name: 'prop.name' }]` can be written as `return: ['prop.name']`. These shorthand versions can be mixed and matched as needed.
 
 ```typescript
 import { AqQuery, buildQuery } from 'aql-builder';
@@ -124,56 +123,22 @@ const query = new AqBuilder(aq)
   .build();
 ```
 
-## The Internals
+### Advanced features
 
-### A single Arango Property
+Although the fluent methods on the `AqBuilder` class are handy, some types of query structures are only supported with manually-created `AqQuery` objects:
 
-```typescript
-type AqProperty property = RequireOneOf<{
-  name?: string,
-  path?: string,
-  document?: string,
-  type: 'string' | 'number' | 'boolean' | 'object' | 'array'
-}, 'name' | 'path'>;
-```
+- Filters that compare two properties, rather than one property to a literal value.
+- Subqueries, and filters/aggregations/property assignments that explicitly reference them.
+- Assignment of subqueries to custom variables that can be included in the results or used in filters
 
-- If only `name` or `path` are specified, they're effectively synonyms — but using them together allows you to control the name of the property in the query's results.
-- `type` is optional, and can be used when aggregate functions need to know the type of data they're working with before applying functions like SUM or AVG.
-- `document` is optional, and controls the name of the variable that contains the property. It defaults to 'item', which the AqQuery structure uses as its default when looping over documents in a given collection.
-
-The `AqAggregate` type extends `AqProperty` with an `aggregate` attribute that determines how the property will be rendered into a `COLLECT` or `AGGREGATE` statement in the final query. Supported aggregate functions consist of `collect`, `distinct` (aka `COUNT_DISTINCT`), `empty` (aka `COUNT_EMPTY`), `nonempty` (aka `COUNT_NONEMPTY`), `min`, `max`, `avg`, and `sum`. An aggregate without an explicit aggregate function is treated as a `COLLECT` statement in the final query.
-
-The `AqFilter` type also extends `AqProperty`, and adds a number of properties that control the filter's equality comparison. `eq` (equals), `lt` (less than), `gt` (greater than), `in`, and `contains` all map to the equality statements one would expected. Setting the `negate` attribute to `true` on the `AqFilter` object will invert the equality statement. An `AqFilter` without an explicit equality comparison is treated as `!= null` in the final query.
-
-### A query description
-
-```typescript
-type AqQuery = {
-  collection: string,
-  document: string,
-  return: AqProperty[],
-  filters: AqFilter[],
-  aggregates: AqAggregates[],
-  count: string | false,
-  returnFilter: AqFilter[],
-  sorts: AqSort[]
-  document: string,
-  limit: number | false
-}
-```
-
-- `collection`: the name of an Arango collection, or a full `ArangoCollection` object.
-- `document`: the variable name that should be used to refer to a single document in the collection; it defaults to 'item'.
-- `return`: property names, or full `AqProperty` objects, that should be returned in the result set.
-- `filters`: property names, or full `AqFilter` objects, that should be used to construct filters.
-- `aggregates`: property names, or full `AqAggregate` objects, that should be collected or aggregated.
-- `count`: When collecting or aggregating, this controls the name of the 'WITH COUNT INTO...' variable.
-- `returnFilter`: Filters that should apply *after* the collect/aggregate phase of the query.
-- `sorts`: Property names, or full `AqSort` objects, to sort the final results by.
-- `limit`: The max number or results to return (`false` or `-1` will return all results).
+Examples can be found in [INTERNALS.md](INTERNALS.md).
 
 ## Limitations
 
-- For the time being, AQL Builder only supports simple queries that operate on a single collection without any joins or subqueries.
-- It doesn't support explicit construction of return documents with nested properties, though it does allow you to select properties that are arrays or objects.
-- AQL functions can't be used when adding individual properties; the aggregate functions like SUM() and MAX() are handled as one-offs by the aggregate code; if you need something more complex, writing your own AQL isnt much more complicated than tweaking the complex JSON that would be necessary to define it.
+As noted above, the `AqBuilder` class doesn't support the full range of features that are possible with `AqQuery`, and `AqQuery` only supports a subset of the full AQL spec. In particular:
+
+- Insert or Update queries. AQL Builder is read-only.
+- Use of constructed documents as query sources. Every query requires an existing collection to iterate over.
+- Explicit construction of return documents with nested properties. (Though you can return properties that are themselves arrays or objects.)
+- AQL functions in general. The aggregate functions like SUM() and MAX() are handled as one-offs by the aggregate code. At least using the current approach, adding arbitrary function support would result in JSON structures more complicated than the AQL itself.
+- Explicitly ordering filter/subquery/aggregation functions to optimize queries or control returned results. The closest we get is the distinction between `filters` and `returnFilters` that run after aggregation.

@@ -1,14 +1,23 @@
 {
   "name": "aql-builder",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "Dynamic query-builder for ArangoDB",
-  "keywords": ["arango", "arangodb", "aql", "query-builder"],
+  "keywords": [
+    "arango",
+    "arangodb",
+    "aql",
+    "query-builder"
+  ],
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "INTERNALS.md"
+  ],
   "engines": {
     "node": ">=14.16"
-  }, 
+  },
   "type": "module",
   "author": {
     "name": "Jeff Eaton",
