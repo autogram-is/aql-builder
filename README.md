@@ -131,7 +131,7 @@ Although the fluent methods on the `AqBuilder` class are handy, some types of qu
 - Subqueries, and filters/aggregations/property assignments that explicitly reference them.
 - Assignment of subqueries to custom variables that can be included in the results or used in filters
 
-Examples can be found in the `docs` directory.
+Examples can be found in [INTERNALS.md](INTERNALS.md).
 
 ## Limitations
 

@@ -1,6 +1,6 @@
 # AQL Builder Internals
 
-This document describes how the library stores the representation of a query internally. Please don't them as authoritative statements about the AQL language as a whole; there are some situations where AQL Builder terminology isn't the same as ArangoDB terminology, and we're primarily concerned with how we map some easy-to-wrangle JSON *to* AQL.
+This document describes how the library stores the representation of a query internally. Please don't take these notes as authoritative statements about the AQL language as a whole; there are some situations where AQL Builder terminology isn't the same as ArangoDB terminology, and we're primarily concerned with how we map some easy-to-wrangle JSON *to* AQL.
 
 ## Important concepts
 
@@ -18,7 +18,7 @@ RETURN {
 
 AQL Builder treats most of the query as collections of 'properties' to be dealt with in different ways. Some are used as filters, some are used in aggregation or collect statements, and others just control the return statement itself.
 
-Each property has three critical pieces: its `path`, its `name`, and its `document`. The path (as seen in the example query)
+Each property has three critical pieces: its `path`, its `name`, and its `document`.
 
 ## Representing a single Arango Property
 
@@ -67,3 +67,8 @@ type AqQuery = {
 - `sorts`: Property names, or full `AqSort` objects, to sort the final results by.
 - `limit`: The max number or results to return (`false` or `-1` will return all results).
 - `return`: property names, or full `AqProperty` objects, that should be returned in the result set.
+
+## TODO
+
+- Subquery docs
+- Using `document` to control filters and return values
