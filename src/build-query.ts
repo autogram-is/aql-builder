@@ -240,7 +240,7 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   if (p.eq !== undefined) {
     conditions.push(
       aql`${literal(path)} ${literal(p.negate ? '!=' : '==')} ${
-        p.value === 'literal' ? p.eq : literal(p.eq)
+        p.value !== 'dynamic' ? p.eq : literal(p.eq)
       }`,
     );
   }
@@ -248,7 +248,7 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   if (p.lt !== undefined) {
     conditions.push(
       aql`${literal(path)} ${literal(p.negate ? '>=' : '<')} ${
-        p.value === 'literal' ? p.lt : literal(p.lt)
+        p.value !== 'dynamic' ? p.lt : literal(p.lt)
       }`,
     );
   }
@@ -256,13 +256,13 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   if (p.gt !== undefined) {
     conditions.push(
       aql`${literal(path)} ${literal(p.negate ? '<=' : '>')} ${
-        p.value === 'literal' ? p.gt : literal(p.gt)
+        p.value !== 'dynamic' ? p.gt : literal(p.gt)
       }`,
     );
   }
 
   if (p.in !== undefined) {
-    if (p.value === 'dynamic' && typeof p.in === 'string') {
+    if (p.value !== 'dynamic' && typeof p.in === 'string') {
       conditions.push(
         aql`${literal(path)} ${literal(p.negate ? 'NOT IN' : 'IN')} ${literal(
           p.in,
