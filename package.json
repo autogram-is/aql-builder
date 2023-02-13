@@ -11,7 +11,9 @@
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "INTERNALS.md"
   ],
   "engines": {
     "node": ">=14.16"
