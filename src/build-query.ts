@@ -86,14 +86,6 @@ export function buildQuery(
     }
   }
 
-  // Add any filters that should apply *before* the collect statement.
-  for (const p of strictSpec.filters ?? []) {
-    if (p.document !== false)
-      querySegments.push(
-        ...wrapFilter(p, strictSpec.document).map(q => aql`${d}FILTER ${q}`),
-      );
-  }
-
   // Add any inline subqueries
   for (const q of strictSpec.subqueries ?? []) {
     // a nested subquery with no name is inline
@@ -121,6 +113,14 @@ export function buildQuery(
       querySegments.push(renderSubQuery(q, depth + 1));
       querySegments.push(aql`${d})`);
     }
+  }
+
+  // Add any filters that should apply *before* the collect statement.
+  for (const p of strictSpec.filters ?? []) {
+    if (p.document !== false)
+      querySegments.push(
+        ...wrapFilter(p, strictSpec.document).map(q => aql`${d}FILTER ${q}`),
+      );
   }
 
   // If there are any COLLECT assignments, or any AGGREGATE statements,
