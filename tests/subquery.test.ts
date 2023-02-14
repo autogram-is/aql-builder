@@ -30,9 +30,9 @@ test('nested subqueries', t => {
   const renderedQuery =
 `FOR uu IN unique_urls
   FOR rw IN responds_with
-  FILTER rw._from == uu._id
     FOR rs IN resources
     FILTER rs._id == rw._to
+  FILTER rw._from == uu._id
 RETURN {
   requested: uu.parsed.href,
   redirects: rw.redirects,
@@ -65,12 +65,12 @@ test('assigned subquery', t => {
 
   const renderedQuery =
   `FOR uu IN unique_urls
-FILTER uu.parsed.protocol IN @value0
 LET request = (
   FOR rw IN responds_with
   FILTER rw._from == uu._id
   RETURN rw
 )
+FILTER uu.parsed.protocol IN @value0
 RETURN {
   url: uu.url,
   redirects: request.redirects
