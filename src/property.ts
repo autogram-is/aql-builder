@@ -1,4 +1,6 @@
 import { JsonPrimitive } from '@salesforce/ts-types';
+import { SupportedAqlFunctions } from './type-guards.js';
+export type AqlFunction = keyof typeof SupportedAqlFunctions;
 export type AggregateFunction = keyof typeof aggregateMap;
 export type SortDirection = keyof typeof sortMap;
 
@@ -13,8 +15,6 @@ type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
 export const aggregateMap = {
   collect: (value: string) => value,
   distinct: (value: string) => `COUNT_DISTINCT(${value})`,
-  empty: (value: string) => `COUNT_EMPTY(${value})`,
-  nonempty: (value: string) => `COUNT_NONEMPTY(${value})`,
   min: (value: string) => `MIN(${value})`,
   max: (value: string) => `MAX(${value})`,
   sum: (value: string) => `SUM(${value})`,
@@ -105,25 +105,25 @@ export type AqProperty = RequireAtLeastOne<
     path?: string;
 
     /**
+     * A function to wrap the property in once it's retrieved; this can be useful
+     * for returning the COUNT of a particular attribute rather than the attribute
+     * itself.
+     *
+     * Light validation is done *if* the property has its `type` set; otherwise,
+     * we only ensure that the function is a known one.
+     *
+     * @example `const prop: AqProperty = { name: 'property', function: 'count' }`
+     *
+     * @experimental
+     */
+    function?: keyof typeof SupportedAqlFunctions;
+
+    /**
      * The data type of the property in question. Generally, this is only necessary
      * when generating aggregate queries that use numeric functions like SUM or AVG
      * on string properties.
      */
     type?: 'string' | 'number' | 'boolean' | 'object' | 'array';
-
-    /**
-     * A function to wrap the property in once it's retrieved; this can be useful
-     * for returning the COUNT of a particular attribute rather than the attribute
-     * itself.
-     *
-     * Note that there's no attempt made to ensure this is a valid AQL function;
-     * let the caller beware.
-     *
-     * @example `const prop: AqProperty = { name: 'property', function: 'COUNT' }`
-     *
-     * @experimental
-     */
-    function?: string;
   },
   'name' | 'path'
 >;
@@ -136,9 +136,7 @@ export type AqAggregate = AqProperty & {
    *             other properties' aggregate values. If any aggregate properties
    *             exist in a query, vanilla properties are treated as 'collect'
    *             aggregates.
-   * - empty:    The number of empty (null or zero-length array) values
-   * - nonempty: The number of non-empty (non-null or 1+ length array) values
-   * - unique:   The number of unique values
+   * - distinct: The number of distinct values
    * - min:      The smallest numeric value present in the property
    * - max:      The largest numeric value present in the property
    * - sum:      The sum of all numeric values in the property

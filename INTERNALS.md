@@ -35,7 +35,7 @@ type AqProperty property = RequireOneOf<{
 - `type` is optional, and can be used when aggregate functions need to know the type of data they're working with before applying functions like SUM or AVG.
 - `document` is optional, and controls the name of the variable that contains the property. It defaults to 'item', which the AqQuery structure uses as its default when looping over documents in a given collection.
 
-The `AqAggregate` type extends `AqProperty` with an `aggregate` attribute that determines how the property will be rendered into a `COLLECT` or `AGGREGATE` statement in the final query. Supported aggregate functions consist of `collect`, `distinct` (aka `COUNT_DISTINCT`), `empty` (aka `COUNT_EMPTY`), `nonempty` (aka `COUNT_NONEMPTY`), `min`, `max`, `avg`, and `sum`. An aggregate without an explicit aggregate function is treated as a `COLLECT` statement in the final query.
+The `AqAggregate` type extends `AqProperty` with an `aggregate` attribute that determines how the property will be rendered into a `COLLECT` or `AGGREGATE` statement in the final query. Supported aggregate functions consist of `collect`, `distinct` (aka `COUNT_DISTINCT`), `min`, `max`, `avg`, and `sum`. An aggregate without an explicit aggregate function is treated as a `COLLECT` statement in the final query.
 
 The `AqFilter` type also extends `AqProperty`, and adds a number of properties that control the filter's equality comparison. `eq` (equals), `lt` (less than), `gt` (greater than), `in`, and `contains` all map to the equality statements one would expected. Setting the `negate` attribute to `true` on the `AqFilter` object will invert the equality statement. An `AqFilter` without an explicit equality comparison is treated as `!= null` in the final query.
 
