@@ -1,4 +1,11 @@
-import { AqProperty, AqAggregate, AqFilter, AqSort } from './property.js';
+import {
+  AqProperty,
+  AqAggregate,
+  AqFilter,
+  AqSort,
+  AqlFunction,
+  AqlAggregateFunction,
+} from './property.js';
 import { AqSubquery, AqQuery } from './query.js';
 
 export function isAqProperty(input: unknown): input is AqProperty {
@@ -40,6 +47,24 @@ export function isAqSubquery(input: unknown): input is AqSubquery {
   return isAqProperty(input) && 'query' in input && isAqQuery(input.query);
 }
 
+export function isAqlFunction(input: unknown): input is AqlFunction {
+  return (
+    typeof input === 'string' &&
+    Object.keys(SupportedAqlFunctions).includes(input.toLocaleLowerCase())
+  );
+}
+
+export function isAqlAggregateFunction(
+  input: unknown,
+): input is AqlAggregateFunction {
+  return (
+    typeof input === 'string' &&
+    Object.keys(SupportedAqlAggregateFunctions).includes(
+      input.toLocaleLowerCase(),
+    )
+  );
+}
+
 export function isSupportedFunction(
   input: string | AqProperty | AqAggregate,
   aggregate = false,
@@ -50,8 +75,10 @@ export function isSupportedFunction(
       ? { funcName: input, type: valueType }
       : { funcName: input.function, type: input.type };
   if (funcName === undefined) return false;
-  
-  const supportedMap: Record<string, string[] | undefined> = aggregate ? SupportedAqlAggregateFunctions : SupportedAqlFunctions;
+
+  const supportedMap: Record<string, string[] | undefined> = aggregate
+    ? SupportedAqlAggregateFunctions
+    : SupportedAqlFunctions;
 
   // Bail if there's simply no knowledge of the function
   const supportedTypes = supportedMap[funcName];
@@ -198,7 +225,6 @@ export const SupportedAqlFunctions = {
   typename: ['*'],
 };
 
-
 export const SupportedAqlAggregateFunctions = {
   // Arrays/strings
   count: ['array', 'string', 'aggregate'],
@@ -224,4 +250,4 @@ export const SupportedAqlAggregateFunctions = {
   variance_population: ['array', 'aggregate'],
   variance_sample: ['array', 'aggregate'],
   variance: ['array', 'aggregate'],
-}
+};

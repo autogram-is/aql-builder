@@ -1,5 +1,8 @@
 import { JsonPrimitive } from '@salesforce/ts-types';
-import { SupportedAqlFunctions, SupportedAqlAggregateFunctions } from './type-guards.js';
+import {
+  SupportedAqlFunctions,
+  SupportedAqlAggregateFunctions,
+} from './type-guards.js';
 export type AqlFunction = keyof typeof SupportedAqlFunctions;
 export type AqlAggregateFunction = keyof typeof SupportedAqlAggregateFunctions;
 export type SortDirection = keyof typeof sortMap;

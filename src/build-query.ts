@@ -79,7 +79,10 @@ export function buildQuery(
   for (const p of strictSpec.aggregates ?? []) {
     const { function: func, ...cleanProp } = p;
     if (func === 'collect') {
-      collected[renderLabel(cleanProp)] = renderPath(cleanProp, strictSpec.document);
+      collected[renderLabel(cleanProp)] = renderPath(
+        cleanProp,
+        strictSpec.document,
+      );
       document[renderLabel(cleanProp)] = renderLabel(cleanProp);
     } else {
       aggregated[renderLabel(p)] = renderAggregatePath(p, strictSpec.document);
@@ -113,7 +116,6 @@ export function buildQuery(
       querySegments.push(aql`${d}LET ${literal(label)} = ${literal(func)}(`);
       querySegments.push(renderSubQuery(q, depth + 1));
       querySegments.push(aql`${d})`);
-
     } else if (!q.inline) {
       const label = renderLabel({ name: q.document ?? 'ERR' });
       querySegments.push(aql`${d}LET ${literal(label)} = (`);
