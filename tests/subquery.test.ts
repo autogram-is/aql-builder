@@ -78,3 +78,42 @@ RETURN {
 
   t.is(buildQuery(pq).query, renderedQuery);
 });
+
+test('assigned wrapped subquery', t => {
+  const pq: AqQuery = {
+    collection: 'unique_urls',
+    document: 'uu',
+    filters: [ { name: 'parsed.protocol', in: ['http:', 'https:'] } ],
+    subqueries: [
+      {
+        name: 'redirects',
+        function: 'count',
+        query: {
+          collection: 'responds_with',
+          document: 'rw',
+          filters: [{ path: '_from', eq: 'uu._id', value: 'dynamic' }],
+          return: ['redirects']
+        }
+      },
+    ],
+    return: [
+      { name: 'url', path: 'url' },
+      { path: 'redirects', document: false }
+    ]
+  }
+
+  const renderedQuery =
+  `FOR uu IN unique_urls
+LET redirects = COUNT(
+  FOR rw IN responds_with
+  FILTER rw._from == uu._id
+  RETURN rw.redirects
+)
+FILTER uu.parsed.protocol IN @value0
+RETURN {
+  url: uu.url,
+  redirects
+}`
+
+  t.is(buildQuery(pq).query, renderedQuery);
+});
