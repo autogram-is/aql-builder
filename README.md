@@ -68,8 +68,8 @@ const aq: AqQuery = {
     { name: 'status', in: [200, 404], document: false },
   ],
   aggregates: [
-    { name: 'status', aggregate: 'collect' },
-    { name: 'mime', aggregate: 'collect' },
+    { name: 'status', function: 'collect' },
+    { name: 'mime', function: 'collect' },
   ],
   count: 'total',
   sorts: [

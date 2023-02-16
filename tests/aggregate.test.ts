@@ -6,7 +6,7 @@ test('render from spec', t => {
   const expected = `
     FOR item IN collection
     COLLECT prop1 = item.prop1
-    AGGREGATE prop2 = SUM(item.prop2), prop3 = SUM(LENGTH(item.prop3))
+    AGGREGATE prop2 = SUM(item.prop2), prop3 = SUM(CHAR_LENGTH(item.prop3))
     RETURN { prop1, prop2, prop3 }
   `;
 
@@ -14,9 +14,9 @@ test('render from spec', t => {
     collection: 'collection',
     document: 'item',
     aggregates: [
-      { path: 'prop1', aggregate: 'collect' },
-      { path: 'prop2', aggregate: 'sum', type: 'number' },
-      { path: 'prop3', aggregate: 'sum', type: 'string' }
+      { path: 'prop1', function: 'collect' },
+      { path: 'prop2', function: 'sum', type: 'number' },
+      { path: 'prop3', function: 'sum', type: 'string' }
     ],
     count: false
   }
@@ -33,7 +33,7 @@ test('aggregate and custom total', t => {
     COLLECT prop1 = item.prop1
     AGGREGATE
       prop2 = SUM(item.prop2),
-      prop3 = SUM(LENGTH(item.prop3)),
+      prop3 = SUM(CHAR_LENGTH(item.prop3)),
       totalCount = COUNT(1)
     RETURN { prop1, prop2, prop3, totalCount }
   `;
@@ -42,9 +42,9 @@ test('aggregate and custom total', t => {
     collection: 'collection',
     document: 'item',
     aggregates: [
-      { path: 'prop1', aggregate: 'collect' },
-      { path: 'prop2', aggregate: 'sum', type: 'number' },
-      { path: 'prop3', aggregate: 'sum', type: 'string' }
+      { path: 'prop1', function: 'collect' },
+      { path: 'prop2', function: 'sum', type: 'number' },
+      { path: 'prop3', function: 'sum', type: 'string' }
     ],
     count: 'totalCount'
   }
@@ -68,7 +68,7 @@ test('render with total', t => {
     collection: 'collection',
     document: 'item',
     count: 'total',
-    aggregates: [{ path: 'prop1', aggregate: 'collect' }]
+    aggregates: [{ path: 'prop1', function: 'collect' }]
   }
 
   const q = buildQuery(spec).query.trim().replace(/[\r\s]+/g, ' ');

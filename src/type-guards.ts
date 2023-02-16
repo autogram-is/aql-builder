@@ -41,7 +41,7 @@ export function isAqSubquery(input: unknown): input is AqSubquery {
 }
 
 export function isSupportedFunction(
-  input: string | AqProperty,
+  input: string | AqProperty | AqAggregate,
   aggregate = false,
   valueType?: string,
 ): boolean {
@@ -50,16 +50,18 @@ export function isSupportedFunction(
       ? { funcName: input, type: valueType }
       : { funcName: input.function, type: input.type };
   if (funcName === undefined) return false;
+  
+  const supportedMap: Record<string, string[] | undefined> = aggregate ? SupportedAqlAggregateFunctions : SupportedAqlFunctions;
 
   // Bail if there's simply no knowledge of the function
-  const supportedTypes = SupportedAqlFunctions[funcName];
+  const supportedTypes = supportedMap[funcName];
   if (supportedTypes === undefined) return false;
 
   // Bail if we're using it as an aggregate, but it's not aggregate-friendly
   if (aggregate && !supportedTypes.includes('aggregate')) return false;
 
   if (type === undefined) {
-    return supportedTypes.includes(funcName);
+    return true;
   } else {
     return (
       supportedTypes.length === 0 ||
@@ -77,7 +79,7 @@ export function isSupportedFunction(
  * specifies its data type, we make sure the function is marked as compatible with
  * that type.
  */
-export const SupportedAqlFunctions: Record<string, undefined | string[]> = {
+export const SupportedAqlFunctions = {
   // Standalone
   date_now: [],
   uuid: [],
@@ -195,3 +197,31 @@ export const SupportedAqlFunctions: Record<string, undefined | string[]> = {
   is_key: ['*'],
   typename: ['*'],
 };
+
+
+export const SupportedAqlAggregateFunctions = {
+  // Arrays/strings
+  count: ['array', 'string', 'aggregate'],
+  length: ['array', 'string', 'aggregate'],
+
+  // Aggregates only
+  sorted_unique: ['aggregate'],
+  count_unique: ['aggregate'],
+  count_distinct: ['aggregate'],
+  distinct: ['aggregate'],
+  collect: ['aggregate'], // This isn't actually a filter; it's a special case to mark a property as part of a COLLECT clause.
+
+  // Arrays
+  unique: ['array', 'aggregate'],
+  max: ['array', 'aggregate'],
+  min: ['array', 'aggregate'],
+  avg: ['array', 'aggregate'],
+  average: ['array', 'aggregate'],
+  stddev_population: ['array', 'aggregate'],
+  stddev_sample: ['array', 'aggregate'],
+  stddev: ['array', 'aggregate'],
+  sum: ['array', 'aggregate'],
+  variance_population: ['array', 'aggregate'],
+  variance_sample: ['array', 'aggregate'],
+  variance: ['array', 'aggregate'],
+}

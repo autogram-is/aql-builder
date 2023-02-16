@@ -5,7 +5,7 @@ import {
   AqSort,
   AqFilter,
   SortDirection,
-  AggregateFunction,
+  AqlAggregateFunction,
 } from './property.js';
 import { AqStrict, AqQuery, expandAqShorthand } from './query.js';
 import { sanitizeName, buildQuery } from './build-query.js';
@@ -111,17 +111,17 @@ export class AqBuilder {
 
   aggregate(
     name: string | AqAggregate,
-    aggregate: AggregateFunction = 'collect',
+    func: AqlAggregateFunction = 'collect',
     path?: string,
   ): this {
     this.spec.aggregates ??= [];
     if (typeof name === 'string') {
-      this.spec.aggregates.push({ path, name, aggregate });
+      this.spec.aggregates.push({ path, name, function: func});
     } else {
       this.spec.aggregates.push({
         ...name,
         ...(path ? { path } : {}),
-        aggregate,
+        function: func,
       });
     }
     return this;

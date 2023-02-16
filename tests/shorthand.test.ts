@@ -20,8 +20,8 @@ test('fluent, spec, and strict spec render identically', t => {
       { path: 'status', in: [200, 404], document: false },
     ],
     aggregates: [
-      { path: 'status', aggregate: 'collect' },
-      { path: 'mime', aggregate: 'collect' },
+      { path: 'status', function: 'collect' },
+      { path: 'mime', function: 'collect' },
     ],
     sorts: [
       { path: 'total', direction: 'desc' },

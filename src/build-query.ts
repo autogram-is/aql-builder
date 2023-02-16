@@ -3,7 +3,6 @@ import { GeneratedAqlQuery, literal, join } from 'arangojs/aql.js';
 import {
   AqProperty,
   AqAggregate,
-  aggregateMap,
   sortMap,
   AqFilter,
   AqSort,
@@ -15,6 +14,7 @@ import {
   expandAqShorthand,
 } from './query.js';
 import { isArangoCollection } from 'arangojs/collection.js';
+import { isAqSubquery, isSupportedFunction } from './type-guards.js';
 
 /**
  * Given an AqQuery object, build an executable GeneratedAqlQuery.
@@ -62,7 +62,7 @@ export function buildQuery(
       strictSpec.return
         ?.filter(p => p.document !== false)
         .map(p => {
-          return { ...p, aggregate: 'collect' } as AqAggregate;
+          return { ...p, function: 'collect' } as AqAggregate;
         }) ?? [];
     strictSpec.aggregates.push(...coerced);
     strictSpec.return = undefined;
@@ -77,9 +77,10 @@ export function buildQuery(
   // Loop through the aggregates, splitting out 'collect' assignments
   // (equivalent to SQL's GROUP BY) from the aggregation functions.
   for (const p of strictSpec.aggregates ?? []) {
-    if (p.aggregate === 'collect') {
-      collected[renderLabel(p)] = renderPath(p, strictSpec.document);
-      document[renderLabel(p)] = renderLabel(p);
+    const { function: func, ...cleanProp } = p;
+    if (func === 'collect') {
+      collected[renderLabel(cleanProp)] = renderPath(cleanProp, strictSpec.document);
+      document[renderLabel(cleanProp)] = renderLabel(cleanProp);
     } else {
       aggregated[renderLabel(p)] = renderAggregatePath(p, strictSpec.document);
       document[renderLabel(p)] = renderLabel(p);
@@ -102,11 +103,17 @@ export function buildQuery(
 
   // Add assignment subqueries
   for (const q of strictSpec.subqueries ?? []) {
-    if ('query' in q) {
+    if (isAqSubquery(q)) {
+      let func: string | undefined;
+      if (q.function && isSupportedFunction(q.function, false, q.type)) {
+        func = q.function.toLocaleUpperCase();
+      }
+
       const label = renderLabel({ name: q.name ?? q.query.document ?? 'ERR' });
-      querySegments.push(aql`${d}LET ${literal(label)} = (`);
+      querySegments.push(aql`${d}LET ${literal(label)} = ${literal(func)}(`);
       querySegments.push(renderSubQuery(q, depth + 1));
       querySegments.push(aql`${d})`);
+
     } else if (!q.inline) {
       const label = renderLabel({ name: q.document ?? 'ERR' });
       querySegments.push(aql`${d}LET ${literal(label)} = (`);
@@ -221,16 +228,34 @@ export function renderSubQuery(subquery: AqQuery | AqSubquery, depth = 0) {
  * aggregate assignment.
  */
 export function renderAggregatePath(p: AqAggregate, document?: string | false) {
-  const path = renderPath(p, document);
+  const { function: func, ...cleanProperty } = p;
+  const path = renderPath(cleanProperty, document);
 
-  if (
-    ['min', 'max', 'sum', 'avg'].includes(p.aggregate) &&
-    p.type !== 'number'
-  ) {
-    return aggregateMap[p.aggregate](`LENGTH(${path})`);
-  } else {
-    return aggregateMap[p.aggregate](path);
+  if (isSupportedFunction(func, true)) {
+    if (['min', 'max', 'sum', 'avg'].includes(func)) {
+      if (p.type === 'string') {
+        return `${func.toLocaleUpperCase()}(CHAR_LENGTH(${path}))`;
+      } else if (p.type !== 'number') {
+        return `${func.toLocaleUpperCase()}(LENGTH(${path}))`;
+      } else {
+        return `${func.toLocaleUpperCase()}(${path})`;
+      }
+    } else if (func === 'collect') {
+      return path;
+    } else {
+      return `${func.toLocaleUpperCase()}(${path})`;
+    }
   }
+
+  // Unsupported aggregate function. Hmmmmmm.
+  return path;
+}
+
+function renderFunction(path: string, p: AqProperty) {
+  if (isSupportedFunction(p, false)) {
+    return `${p.function?.toLocaleUpperCase()}(${path})`;
+  }
+  return path;
 }
 
 function wrapFilter(p: AqFilter, document?: string | false) {
@@ -330,11 +355,7 @@ export function renderPath(
 ): string {
   const prefix = p.document === false ? '' : p.document ?? document ?? '';
   const path = (prefix ? prefix + '.' : '') + (p.path ?? p.name);
-  if (p.function) {
-    return `${p.function.toLocaleUpperCase()}(${path})`;
-  } else {
-    return path;
-  }
+  return renderFunction(path, p);
 }
 
 export function renderLabel(

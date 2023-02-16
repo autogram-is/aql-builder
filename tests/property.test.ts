@@ -28,11 +28,11 @@ test('name, path, custom document', t => {
 });
 
 test('aggregate string property', t => {
-  const p: AqAggregate = { name: 'label', path: 'nested.property', document: 'foo', aggregate: 'sum' };
+  const p: AqAggregate = { name: 'label', path: 'nested.property', document: 'foo', function: 'sum' };
   t.is(renderAggregate(p), 'AGGREGATE label: SUM(LENGTH(foo.nested.property))');
 });
 
 test('aggregate number property', t => {
-  const p: AqAggregate = { name: 'label', path: 'nested.property', document: 'foo', aggregate: 'sum', type: 'number' };
+  const p: AqAggregate = { name: 'label', path: 'nested.property', document: 'foo', function: 'sum', type: 'number' };
   t.is(renderAggregate(p), 'AGGREGATE label: SUM(foo.nested.property)');
 });

@@ -149,13 +149,13 @@ export function expandAqShorthand(
       if (typeof val === 'string') {
         input.aggregates[i] = {
           path: val,
-          aggregate: 'collect',
+          function: 'collect',
         } as AqAggregate;
       } else if (Array.isArray(val)) {
         input.aggregates[i] = {
           name: val[0],
           path: val[1],
-          aggregate: 'collect',
+          function: 'collect',
         } as AqAggregate;
       }
     }

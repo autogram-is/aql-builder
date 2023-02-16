@@ -1,7 +1,7 @@
 import { JsonPrimitive } from '@salesforce/ts-types';
-import { SupportedAqlFunctions } from './type-guards.js';
+import { SupportedAqlFunctions, SupportedAqlAggregateFunctions } from './type-guards.js';
 export type AqlFunction = keyof typeof SupportedAqlFunctions;
-export type AggregateFunction = keyof typeof aggregateMap;
+export type AqlAggregateFunction = keyof typeof SupportedAqlAggregateFunctions;
 export type SortDirection = keyof typeof sortMap;
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -11,15 +11,6 @@ type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   {
     [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
   }[Keys];
-
-export const aggregateMap = {
-  collect: (value: string) => value,
-  distinct: (value: string) => `COUNT_DISTINCT(${value})`,
-  min: (value: string) => `MIN(${value})`,
-  max: (value: string) => `MAX(${value})`,
-  sum: (value: string) => `SUM(${value})`,
-  avg: (value: string) => `AVG(${value})`,
-};
 
 export const sortMap = {
   asc: 'ASC',
@@ -116,7 +107,7 @@ export type AqProperty = RequireAtLeastOne<
      *
      * @experimental
      */
-    function?: keyof typeof SupportedAqlFunctions;
+    function?: AqlFunction;
 
     /**
      * The data type of the property in question. Generally, this is only necessary
@@ -145,7 +136,7 @@ export type AqAggregate = AqProperty & {
    * If numeric functions (min, max, sum, avg) are used on string or array
    * properties, the function is applied to the length of the property.
    */
-  aggregate: AggregateFunction;
+  function: AqlAggregateFunction;
 };
 
 export type AqSort = AqProperty & {
