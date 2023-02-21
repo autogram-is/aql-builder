@@ -1,5 +1,13 @@
 # AQL Builder todos
 
-- [ ] Figure out a better approach to the 'document' property. One possible solution: support an explicit 'LET' command that assigns variables, and skip the 'prefix path with document name' step whenever a path matches an already-set variable.
-- [ ] Allow `AqBuilder.sortBy()` to accept a Sort property in addition to a propname and direction. That would allow sorting by function results.
-- [ ] Consider using the `function` attribute for aggregation. That would make validation of supported functions more complicated, however.
+- [ ] General improvements
+  - [ ] Figure out a better approach to the 'document' property. Right now, it's necessary in many cases where we should be able to intuit from context.
+  - [ ] Add examples of different query types
+  - [ ] Make `LET x = y` explicit
+  - [ ] Make `COLLECT` a special case of `LET` rather than `AGGREGATE`; this would be convenient, as `LET` statements are currently transformed to `COLLECT`s if any aggregation or collect statements are present.
+  - [ ] Remove `collect` pseudo-function entry in SupportedAqlFunctions, replace it with `collect: true` flag on property
+- [ ] AqQuery structure
+  - [ ] Carve out preFilter, filter, and postFilter sections of `AqQuery` structure; preFilter always runs before subselects. filter runs after subselects but before collect/aggregate. And postFilter runs after all of them but before LIMIT/SORT.
+  - [ ] Store return properties and LET assignments as a dictionary; use keys in LET to auto-shortcut document prefixing.
+- [ ] Builder/Rendering
+  - [ ] `expandShorthand()` should expand property shorthand, ensuring default function values for aggregates.
