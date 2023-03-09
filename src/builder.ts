@@ -101,8 +101,8 @@ export class AqBuilder {
     return this;
   }
 
-  groupBy(name: string | AqAggregate, label?: string): this {
-    return this.collect(name, label);
+  groupBy(name: string | AqAggregate, path?: string): this {
+    return this.collect(name, path);
   }
 
   collect(name: string | AqAggregate, path?: string): this {
