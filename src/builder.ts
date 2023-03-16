@@ -112,11 +112,11 @@ export class AqBuilder {
   /**
    * Groups query results by the values in a given property.
    */
-  groupBy(definition: AqAggregate): this
+  groupBy(definition: AqAggregate): this;
   /**
    * Groups query results by the values in a given property.
    */
-  groupBy(name: string, path?: string): this
+  groupBy(name: string, path?: string): this;
   /**
    * Groups query results by the values in a given property.
    */
@@ -128,11 +128,11 @@ export class AqBuilder {
   /**
    * Groups query results by the values in a given property.
    */
-  collect(definition: AqAggregate): this
+  collect(definition: AqAggregate): this;
   /**
    * Groups query results by the values in a given property.
    */
-  collect(name: string, path?: string): this
+  collect(name: string, path?: string): this;
   /**
    * Groups query results by the values in a given property.
    */
@@ -145,12 +145,12 @@ export class AqBuilder {
    * Adds an aggregate property to the query results that summarizes a particular
    * property's values, in conjunction with a collect/groupBy statement.
    */
-  aggregate(name: string, func?: AqlAggregateFunction, path?: string): this
+  aggregate(name: string, func?: AqlAggregateFunction, path?: string): this;
   /**
    * Adds an aggregate property to the query results that summarizes a particular
    * property's values, in conjunction with a collect/groupBy statement.
    */
-  aggregate(definition: AqAggregate): this
+  aggregate(definition: AqAggregate): this;
   /**
    * Adds an aggregate property to the query results that summarizes a particular
    * property's values, in conjunction with a collect/groupBy statement.
@@ -175,25 +175,25 @@ export class AqBuilder {
 
   /**
    * Filters query results by a particular property's value.
-   * 
+   *
    * @remarks
    * The order in which the query is built matters: if 'groupBy' or 'aggregate'
    * clauses have already been added, the filter will apply to the post-aggregation
    * values.
    */
-  filterBy(name: string, value?: JsonPrimitive | JsonPrimitive[]): this
+  filterBy(name: string, value?: JsonPrimitive | JsonPrimitive[]): this;
   /**
    * Filters query results by a particular property's value.
-   * 
+   *
    * @remarks
    * The order in which the query is built matters: if 'groupBy' or 'aggregate'
    * clauses have already been added, the filter will apply to the post-aggregation
    * values.
    */
-  filterBy(definition: AqFilter): this
+  filterBy(definition: AqFilter): this;
   /**
    * Filters query results by a particular property's value.
-   * 
+   *
    * @remarks
    * The order in which the query is built matters: if 'groupBy' or 'aggregate'
    * clauses have already been added, the filter will apply to the post-aggregation
@@ -237,11 +237,11 @@ export class AqBuilder {
   /**
    * Sorts the query results by a particular property value.
    */
-  sortBy(name: string | null, direction?: SortDirection): this
+  sortBy(name: string | null, direction?: SortDirection): this;
   /**
    * Sorts the query results by a particular property value.
    */
-  sortBy(definition: AqSort): this
+  sortBy(definition: AqSort): this;
   /**
    * Sorts the query results by a particular property value.
    */
