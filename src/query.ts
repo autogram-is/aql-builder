@@ -9,6 +9,11 @@ import { AqProperty, AqAggregate, AqSort, AqFilter } from './property.js';
  */
 export type AqQuery = {
   /**
+   * An optional description of the query; it will not affect the data returned.
+   */
+  description?: string;
+
+  /**
    * The name of the collection to query, or a direct reference to an
    * {@link ArangoCollection} instance.
    */

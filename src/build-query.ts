@@ -38,6 +38,10 @@ export function buildQuery(
   // An array of GeneratedAqlQueries we can fill as we build out the query
   const querySegments: GeneratedAqlQuery[] = [];
 
+  if (strictSpec.description) {
+    querySegments.push(aql`/** ${literal(strictSpec.description)} */`);
+  }
+
   // The kickoff for the query; looping over the collection.
   if (isArangoCollection(strictSpec.collection)) {
     querySegments.push(

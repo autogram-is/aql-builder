@@ -84,7 +84,15 @@ export class AqBuilder {
   }
 
   /**
-   * Adds a {@link AqProperty} to the document returned by the query.
+   * Adds a descriptive comment to the query; there is no effect on the query results.
+   */
+  comment(input: string): this {
+    this.spec.description = input;
+    return this;
+  }
+
+  /**
+   * Adds a property to the query results.
    *
    * @remarks
    * If any {@link AqAggregate} properties exist on the query, these
@@ -101,14 +109,52 @@ export class AqBuilder {
     return this;
   }
 
+  /**
+   * Groups query results by the values in a given property.
+   */
+  groupBy(definition: AqAggregate): this
+  /**
+   * Groups query results by the values in a given property.
+   */
+  groupBy(name: string, path?: string): this
+  /**
+   * Groups query results by the values in a given property.
+   */
   groupBy(name: string | AqAggregate, path?: string): this {
-    return this.collect(name, path);
+    if (typeof name === 'string') return this.aggregate(name, 'collect', path);
+    return this.aggregate(name);
   }
 
+  /**
+   * Groups query results by the values in a given property.
+   */
+  collect(definition: AqAggregate): this
+  /**
+   * Groups query results by the values in a given property.
+   */
+  collect(name: string, path?: string): this
+  /**
+   * Groups query results by the values in a given property.
+   */
   collect(name: string | AqAggregate, path?: string): this {
-    return this.aggregate(name, 'collect', path);
+    if (typeof name === 'string') return this.aggregate(name, 'collect', path);
+    return this.aggregate(name);
   }
 
+  /**
+   * Adds an aggregate property to the query results that summarizes a particular
+   * property's values, in conjunction with a collect/groupBy statement.
+   */
+  aggregate(name: string, func?: AqlAggregateFunction, path?: string): this
+  /**
+   * Adds an aggregate property to the query results that summarizes a particular
+   * property's values, in conjunction with a collect/groupBy statement.
+   */
+  aggregate(definition: AqAggregate): this
+  /**
+   * Adds an aggregate property to the query results that summarizes a particular
+   * property's values, in conjunction with a collect/groupBy statement.
+   */
   aggregate(
     name: string | AqAggregate,
     func: AqlAggregateFunction = 'collect',
@@ -127,6 +173,32 @@ export class AqBuilder {
     return this;
   }
 
+  /**
+   * Filters query results by a particular property's value.
+   * 
+   * @remarks
+   * The order in which the query is built matters: if 'groupBy' or 'aggregate'
+   * clauses have already been added, the filter will apply to the post-aggregation
+   * values.
+   */
+  filterBy(name: string, value?: JsonPrimitive | JsonPrimitive[]): this
+  /**
+   * Filters query results by a particular property's value.
+   * 
+   * @remarks
+   * The order in which the query is built matters: if 'groupBy' or 'aggregate'
+   * clauses have already been added, the filter will apply to the post-aggregation
+   * values.
+   */
+  filterBy(definition: AqFilter): this
+  /**
+   * Filters query results by a particular property's value.
+   * 
+   * @remarks
+   * The order in which the query is built matters: if 'groupBy' or 'aggregate'
+   * clauses have already been added, the filter will apply to the post-aggregation
+   * values.
+   */
   filterBy(
     property: string | AqFilter,
     value?: JsonPrimitive | JsonPrimitive[],
@@ -162,6 +234,17 @@ export class AqBuilder {
     return this;
   }
 
+  /**
+   * Sorts the query results by a particular property value.
+   */
+  sortBy(name: string | null, direction?: SortDirection): this
+  /**
+   * Sorts the query results by a particular property value.
+   */
+  sortBy(definition: AqSort): this
+  /**
+   * Sorts the query results by a particular property value.
+   */
   sortBy(
     property: string | null | AqSort,
     direction: SortDirection = 'asc',
@@ -180,6 +263,9 @@ export class AqBuilder {
     return this;
   }
 
+  /**
+   * Limits the number of results returned.
+   */
   limit(value: number | undefined): this {
     if (value && value > 0) {
       this.spec.limit = value;
@@ -189,6 +275,10 @@ export class AqBuilder {
     return this;
   }
 
+  /**
+   * Changes the name of the 'count' property generated when aggregating data. Setting
+   * count to 'false' will remove the auto-calculated property from the query results entirely.
+   */
   count(label: string | false): this {
     this.spec.count = label;
     return this;
