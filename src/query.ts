@@ -9,9 +9,19 @@ import { AqProperty, AqAggregate, AqSort, AqFilter } from './property.js';
  */
 export type AqQuery = {
   /**
-   * An optional description of the query; it will not affect the data returned.
+   * A human-readable comment that will be embedded into the query without affecting the data returned.
    */
-  description?: string;
+  comment?: string;
+
+  /**
+   * Descriptive metadata about the query and its purpose. This information will
+   * have no effect on the generated query or the results, but can be useful when
+   * saving serialized versions of queries for later reuse.
+   */
+  metadata?: Record<string, string | undefined> & { 
+    category?: string,
+    description?: string,
+  };
 
   /**
    * The name of the collection to query, or a direct reference to an

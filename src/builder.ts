@@ -87,7 +87,7 @@ export class AqBuilder {
    * Adds a descriptive comment to the query; there is no effect on the query results.
    */
   comment(input: string): this {
-    this.spec.description = input;
+    this.spec.comment = input;
     return this;
   }
 
