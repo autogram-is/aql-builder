@@ -316,9 +316,9 @@ function wrapFilter(p: AqFilter, document?: string | false) {
     } else {
       if (p.type === 'string' && typeof p.contains === 'string') {
         conditions.push(
-          aql`${literal(path)} ${literal(p.negate ? 'NOT LIKE' : 'LIKE')} '${
+          aql`${literal(path)} ${literal(p.negate ? 'NOT LIKE' : 'LIKE')} ${
             p.contains
-          }'`,
+          }`,
         );
       } else {
         conditions.push(
