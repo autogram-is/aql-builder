@@ -318,7 +318,7 @@ function wrapFilter(p: AqFilter, document?: string | false) {
         conditions.push(
           aql`${literal(path)} ${literal(p.negate ? 'NOT LIKE' : 'LIKE')} ${
             p.contains
-          }'`,
+          }`,
         );
       } else {
         conditions.push(
