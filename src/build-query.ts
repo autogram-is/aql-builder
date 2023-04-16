@@ -188,11 +188,6 @@ export function buildQuery(
       );
   }
 
-  // Add a LIMIT statement if a max number of records was strictSpecified.
-  if (strictSpec.limit && strictSpec.limit > 0) {
-    querySegments.push(aql`${d}LIMIT ${strictSpec.limit}`);
-  }
-
   if (strictSpec.sorts === null) {
     querySegments.push(aql`${d}SORT null`);
   } else {
@@ -206,6 +201,11 @@ export function buildQuery(
       );
     }
   }
+
+  // Add a LIMIT statement if a max number of records was strictSpecified.
+  if (strictSpec.limit && strictSpec.limit > 0) {
+    querySegments.push(aql`${d}LIMIT ${strictSpec.limit}`);
+  }  
 
   // Unless we're in an inline subquery, build out the RETURN clause.
   if (!strictSpec.inline) {
