@@ -268,6 +268,12 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   const path = renderPath(p, document);
 
   const conditions: GeneratedAqlQuery[] = [];
+  if (p.join !== undefined) {
+    conditions.push(
+      aql`${literal(path)} == ${literal(p.join)}`,
+    );
+  }
+
   if (p.eq !== undefined) {
     conditions.push(
       aql`${literal(path)} ${literal(p.negate ? '!=' : '==')} ${
