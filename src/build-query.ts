@@ -171,11 +171,11 @@ export function buildQuery(
       querySegments.push(join(qs, ',\n'));
     } else {
       // If there are no aggregates but COUNT is active, create it.
-      if (strictSpec.count !== false) {
+      if (strictSpec.count) {
         querySegments.push(
-          aql`${d}WITH COUNT INTO ${literal(strictSpec.count ?? 'total')}`,
+          aql`${d}WITH COUNT INTO ${literal(strictSpec.count)}`,
         );
-        document[strictSpec.count ?? 'total'] = strictSpec.count ?? 'total';
+        document[strictSpec.count] = strictSpec.count;
       }
     }
   }

@@ -136,7 +136,9 @@ export function expandAqShorthand(
 ) {
   input = { ...options, ...input };
   input.document ??= 'item';
-  input.count ??= 'total';
+  if (input.count === undefined) {
+    input.count = 'total';
+  }
 
   if (input.filters) {
     for (let i = 0; i < input.filters.length; i++) {
