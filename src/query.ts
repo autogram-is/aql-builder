@@ -1,5 +1,6 @@
-import { ArangoCollection } from 'arangojs/collection.js';
+import { ArangoCollection, isArangoCollection } from 'arangojs/collection.js';
 import { AqProperty, AqAggregate, AqSort, AqFilter } from './property.js';
+import { RequireExactlyOne } from './type-guards.js';
 
 /**
  * A structured description of a simple Arango query.
@@ -87,17 +88,33 @@ export type AqQuery = {
 
   /**
    * A list of {@link AqProperty} definitions, property names, or property
-   * name/path pairs, to be returned in the results.
+   * name/path pairs, to be returned in the results. `return` and `remove`
+   * clauses cannot be present in the same query.
    */
   return?: (AqPropertyName | AqPropertyNameAndPath | AqProperty)[];
+
+  /**
+   * A `remove` clause to delete a given document. `return` and `remove` clauses
+   * cannot be present in the same query.
+   * 
+   * - true
+   *   The query will be used to build a list of _keys; documents with those keys
+   *   in the current query's collection will be removed.
+   * - string | ArangoCollection
+   *   The query will be used to build a list of _keys; documents with those keys
+   *   in the named query's collection will be removed.
+   * - AqRemoveClause
+   *   The query will be used to build a list of records; the `source` value of the
+   *   AqRemoveClause will be used to determine the Key ID value to be deleted, and the
+   *   `collection` value of the AqRemoveClause will be used to determine the target collection.
+   */
+  remove?: true | (string | ArangoCollection | AqRemove | AqRemove)[];
 };
 
 /**
  * A self-contained query to be run inside another query; if a subquery's
  * `name` property is set, it will be rendered as a `LET` assignment in
  * the final AQL.
- *
- * @typedef {AqSubquery}
  */
 export type AqSubquery = Partial<Omit<AqProperty, 'path'>> & {
   query: AqQuery;
@@ -108,21 +125,32 @@ export type AqPropertyName = string;
 export type AqPropertyNameAndPath = [name: string, path: string];
 
 /**
+ * When building a REMOVE query, explicitly specifies the target collection
+ * and key value. 
+ */
+export type AqRemove = {
+  collection: string | ArangoCollection
+} & RequireExactlyOne<AqRemovePointer, 'property' | 'value'>
+type AqRemovePointer = {
+  property: string,
+  value: string
+}
+
+/**
  * A strict version of AqQuery that requires an explicit {@link AqQuery.document|document}
  * value, and doesn't support shorthand property syntax for filters,
  * aggregates, sorts, or return values.
  */
 export type AqStrict = Omit<
   AqQuery,
-  'document' | 'count' | 'filters' | 'aggregates' | 'sorts' | 'return'
+  'document' | 'count' | 'filters' | 'aggregates' | 'sorts' | 'return' | 'remove'
 > & {
   document: string;
   count: string | false;
   filters?: AqFilter[];
   aggregates?: AqAggregate[];
   sorts?: AqSort[] | null;
-  return?: AqProperty[];
-};
+} & ({ return?: AqProperty[], remove: never } | { remove?: AqRemove[], return: never })
 
 export interface AqlExpansionOptions {
   document?: string;
@@ -194,6 +222,22 @@ export function expandAqShorthand(
         input.return[i] = { name: val[0], path: val[1] } as AqProperty;
       }
     }
+  }
+
+  if (input.remove === true) {
+    input.remove = [{
+      collection: input.collection,
+      property: '_key'
+    }];
+  } else if (input.remove) {
+    input.remove = input.remove.map(ir => {
+      if (typeof ir === 'string' || isArangoCollection(ir)) return ir;
+      else return ir;
+    })
+  }
+
+  if (input.remove && input.return) {
+    throw new TypeError('Return and remove clauses are mutually exclusive');
   }
 
   return input as AqStrict;

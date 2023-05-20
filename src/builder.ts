@@ -7,7 +7,7 @@ import {
   SortDirection,
   AqlAggregateFunction,
 } from './property.js';
-import { AqStrict, AqQuery, expandAqShorthand } from './query.js';
+import { AqStrict, AqQuery, expandAqShorthand, AqRemove } from './query.js';
 import { sanitizeName, buildQuery } from './build-query.js';
 import { JsonPrimitive } from '@salesforce/ts-types';
 import { ArangoCollection, isArangoCollection } from 'arangojs/collection.js';
@@ -100,6 +100,9 @@ export class AqBuilder {
    * the final query is built.
    */
   return(name: string | AqProperty, path?: string): this {
+    if (this.spec.remove) {
+      throw new TypeError('Return and remove clauses are mutually exclusive');
+    }
     this.spec.return ??= [];
     if (typeof name === 'string') {
       this.spec.return.push({ name, path });
@@ -108,6 +111,35 @@ export class AqBuilder {
     }
     return this;
   }
+
+
+  /**
+   * Delete matching documents from the collection.
+   */
+  remove(): this;
+  remove(clause?: AqRemove): this;
+  remove(collection?: string | ArangoCollection): this;
+  remove(input?: string | ArangoCollection | AqRemove): this {
+    if (this.spec.return) {
+      throw new TypeError('Return and remove clauses are mutually exclusive');
+    }
+    this.spec.remove ??= [];
+    if (typeof input === 'undefined') {
+      this.spec.remove.push({
+        property: '_key',
+        collection: this.spec.collection
+      });
+    } else if (typeof input === 'string' || isArangoCollection(input)) {
+      this.spec.remove.push({
+        property: '_key',
+        collection: input
+      });
+    } else {
+      this.spec.remove.push(input);
+    }
+    return this;
+  }
+  
 
   /**
    * Groups query results by the values in a given property.

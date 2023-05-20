@@ -9,6 +9,8 @@ import {
 } from './property.js';
 import {
   AqQuery,
+  AqRemove,
+  AqStrict,
   AqSubquery,
   AqlExpansionOptions,
   expandAqShorthand,
@@ -209,7 +211,11 @@ export function buildQuery(
 
   // Unless we're in an inline subquery, build out the RETURN clause.
   if (!strictSpec.inline) {
-    querySegments.push(renderReturn(document, depth, strictSpec.document));
+    if (strictSpec.remove) {
+      querySegments.push(...renderRemove(strictSpec, strictSpec.remove));
+    } else {
+      querySegments.push(renderReturn(document, depth, strictSpec.document));
+    }
   }
 
   return join(querySegments, '\n');
@@ -331,6 +337,18 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   }
 
   return conditions;
+}
+
+function renderRemove(spec: AqStrict, remove: AqRemove[]): GeneratedAqlQuery[] {
+  const clauses: GeneratedAqlQuery[] = [];
+  for (const rm of remove) {
+    if (rm.value) {
+      clauses.push(aql`REMOVE { _key: ${rm.value} } IN ${isArangoCollection(rm.collection) ? rm.collection : literal(rm.collection)}`);
+    } else {
+      clauses.push(aql`REMOVE { _key: ${literal(spec.document)}.${literal(rm.property)} } IN ${isArangoCollection(rm.collection) ? rm.collection : literal(rm.collection)}`);
+    }
+  }
+  return clauses;
 }
 
 function renderReturn(
