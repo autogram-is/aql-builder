@@ -8,28 +8,28 @@ test('query renders', t => {
   COLLECT
     status = item.status,
     mime = item.mime
-  WITH COUNT INTO total
+  WITH COUNT INTO howMany
   FILTER status IN @value1
-  SORT total DESC
+  SORT howMany DESC
   RETURN {
     status,
     mime,
-    total
+    howMany
   }`;
 
   const q = new AqBuilder('responses')
     .filterBy('url.domain', ['example.com', 'test.com'])
     .groupBy('status')
     .groupBy('mime')
-    .count('total')
+    .count('howMany')
     .filterBy('status', [200, 404])
-    .sortBy('total', 'desc')
+    .sortBy('howMany', 'desc')
     .build();
 
   const qt = q.query.trim().replace(/[\r\s]+/g, ' ');
   const rt = rendered.trim().replace(/[\r\s]+/g, ' ');
 
-  t.is(qt, rt);
+  t.is(rt, qt);
 });
 
 test('custom document', t => {

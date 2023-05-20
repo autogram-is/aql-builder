@@ -151,6 +151,11 @@ export type AqSort = AqProperty & {
 
 export type AqFilter = AqProperty & {
   /**
+   * Filters the query result to match the value in another property. This can eliminate the need for some simple subqueries.
+   */
+  join?: JsonPrimitive;
+
+  /**
    * Filters the query result to documents where the property is **equal to** the specified value.
    */
   eq?: JsonPrimitive;

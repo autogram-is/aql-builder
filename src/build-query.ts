@@ -173,11 +173,11 @@ export function buildQuery(
       querySegments.push(join(qs, ',\n'));
     } else {
       // If there are no aggregates but COUNT is active, create it.
-      if (strictSpec.count !== false) {
+      if (strictSpec.count) {
         querySegments.push(
-          aql`${d}WITH COUNT INTO ${literal(strictSpec.count ?? 'total')}`,
+          aql`${d}WITH COUNT INTO ${literal(strictSpec.count)}`,
         );
-        document[strictSpec.count ?? 'total'] = strictSpec.count ?? 'total';
+        document[strictSpec.count] = strictSpec.count;
       }
     }
   }
@@ -188,11 +188,6 @@ export function buildQuery(
       querySegments.push(
         ...wrapFilter(p, strictSpec.document).map(q => aql`${d}FILTER ${q}`),
       );
-  }
-
-  // Add a LIMIT statement if a max number of records was strictSpecified.
-  if (strictSpec.limit && strictSpec.limit > 0) {
-    querySegments.push(aql`${d}LIMIT ${strictSpec.limit}`);
   }
 
   if (strictSpec.sorts === null) {
@@ -208,6 +203,11 @@ export function buildQuery(
       );
     }
   }
+
+  // Add a LIMIT statement if a max number of records was strictSpecified.
+  if (strictSpec.limit && strictSpec.limit > 0) {
+    querySegments.push(aql`${d}LIMIT ${strictSpec.limit}`);
+  }  
 
   // Unless we're in an inline subquery, build out the RETURN clause.
   if (!strictSpec.inline) {
@@ -274,6 +274,12 @@ function wrapFilter(p: AqFilter, document?: string | false) {
   const path = renderPath(p, document);
 
   const conditions: GeneratedAqlQuery[] = [];
+  if (p.join !== undefined) {
+    conditions.push(
+      aql`${literal(path)} == ${literal(p.join)}`,
+    );
+  }
+
   if (p.eq !== undefined) {
     conditions.push(
       aql`${literal(path)} ${literal(p.negate ? '!=' : '==')} ${
