@@ -1,6 +1,6 @@
 {
   "name": "aql-builder",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "description": "Dynamic query-builder for ArangoDB",
   "keywords": [
     "arango",
