@@ -257,3 +257,11 @@ export const SupportedAqlAggregateFunctions = {
   variance_sample: ['array', 'aggregate'],
   variance: ['array', 'aggregate'],
 };
+
+
+export function isSupportedAggregate(input: unknown): input is AqlAggregateFunction {
+  return (
+    typeof input === 'string' &&
+    input in Object.keys(SupportedAqlAggregateFunctions)
+  );
+}
