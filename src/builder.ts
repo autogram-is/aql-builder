@@ -196,11 +196,7 @@ export class AqBuilder {
     if (typeof name === 'string') {
       this.spec.aggregates.push({ path, name, function: func });
     } else {
-      this.spec.aggregates.push({
-        ...name,
-        ...(path ? { path } : {}),
-        function: func,
-      });
+      this.spec.aggregates.push(name);
     }
     return this;
   }
